@@ -72,7 +72,8 @@ class AutenticacionControllerTest {
 
         String usuarioJson = """
                 {
-                  "sNombreCompleto": "Usuario Inactivo Prueba",
+                  "sNombres": "Usuario",
+                  "sApellidos": "Inactivo Prueba",
                   "sEmail": "inactivo.prueba@utp.edu.pe",
                   "sDni": "70055667",
                   "sTelefono": "987654323",
@@ -93,12 +94,10 @@ class AutenticacionControllerTest {
 
         String inactivarJson = """
                 {
-                  "sNombreCompleto": "Usuario Inactivo Prueba",
-                  "sEmail": "inactivo.prueba@utp.edu.pe",
                   "sEstado": "INACTIVO"
                 }
                 """;
-        MockHttpServletRequestBuilder reqInactivar = MockMvcRequestBuilders.put(new URI("/api/usuarios/" + id))
+        MockHttpServletRequestBuilder reqInactivar = MockMvcRequestBuilders.put(new URI("/api/usuarios/" + id + "/estado"))
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(inactivarJson)

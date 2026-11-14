@@ -30,7 +30,8 @@ class UsuarioControllerTest {
 
     private static final String USUARIO_VALIDO_JSON = """
             {
-              "sNombreCompleto": "Jorge Vidal Prueba",
+              "sNombres": "Jorge",
+              "sApellidos": "Vidal Prueba",
               "sEmail": "jorge.vidal.prueba@utp.edu.pe",
               "sDni": "70099887",
               "sTelefono": "987000111",
@@ -143,7 +144,8 @@ class UsuarioControllerTest {
         System.out.println("Ejecutando testCrearUsuarioConEmailInvalido");
         String json = """
                 {
-                  "sNombreCompleto": "Jorge Vidal Prueba",
+                  "sNombres": "Jorge",
+                  "sApellidos": "Vidal Prueba",
                   "sEmail": "no-es-un-email",
                   "sDni": "70099887",
                   "sTelefono": "987000111",
@@ -166,7 +168,8 @@ class UsuarioControllerTest {
         System.out.println("Ejecutando testCrearUsuarioConRolInvalido");
         String json = """
                 {
-                  "sNombreCompleto": "Jorge Vidal Prueba",
+                  "sNombres": "Jorge",
+                  "sApellidos": "Vidal Prueba",
                   "sEmail": "jorge.vidal.prueba@utp.edu.pe",
                   "sDni": "70099887",
                   "sTelefono": "987000111",
@@ -183,27 +186,25 @@ class UsuarioControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
     }
 
-    /* 10° Test: Actualizar usuario con datos válidos */
+    /* 10° Test: Actualizar nombres, apellidos, correo y celular */
     @Test
     void testActualizarUsuarioConDatosValidos() throws Exception {
         System.out.println("Ejecutando testActualizarUsuarioConDatosValidos");
         String id = crearUsuarioDePrueba();
         String json = """
                 {
-                  "sNombreCompleto": "Jorge Vidal Actualizado",
+                  "sNombres": "Jorge Luis",
+                  "sApellidos": "Vidal Actualizado",
                   "sEmail": "jorge.vidal.prueba@utp.edu.pe",
-                  "sEstado": "INACTIVO"
+                  "sTelefono": "912345678"
                 }
                 """;
-        URI uri = new URI("/api/usuarios/" + id);
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.put(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json)
-                .accept(MediaType.APPLICATION_JSON);
-        MvcResult result = mockMvc.perform(req).andReturn();
+        MvcResult result = put("/api/usuarios/" + id, json);
         assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
-        assertTrue(result.getResponse().getContentAsString().contains("Jorge Vidal Actualizado"));
-        assertTrue(result.getResponse().getContentAsString().contains("\"sEstado\":\"INACTIVO\""));
+        String body = result.getResponse().getContentAsString();
+        assertTrue(body.contains("\"sNombreCompleto\":\"Jorge Luis Vidal Actualizado\""));
+        assertTrue(body.contains("\"sTelefono\":\"912345678\""));
+        assertTrue(body.contains("\"sEstado\":\"ACTIVO\""));
     }
 
     /* 11° Test: Actualizar usuario inexistente */
@@ -212,38 +213,69 @@ class UsuarioControllerTest {
         System.out.println("Ejecutando testActualizarUsuarioInexistente");
         String json = """
                 {
-                  "sNombreCompleto": "Nombre Cualquiera",
+                  "sNombres": "Nombre",
+                  "sApellidos": "Cualquiera",
                   "sEmail": "cualquiera@utp.edu.pe",
-                  "sEstado": "ACTIVO"
+                  "sTelefono": ""
                 }
                 """;
-        URI uri = new URI("/api/usuarios/999999999");
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.put(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json)
-                .accept(MediaType.APPLICATION_JSON);
-        MvcResult result = mockMvc.perform(req).andReturn();
+        MvcResult result = put("/api/usuarios/999999999", json);
         assertEquals(HttpStatus.NOT_FOUND.value(), result.getResponse().getStatus());
     }
 
-    /* 12° Test: Actualizar usuario con estado inválido */
+    /* 12° Test: Actualizar usuario con el correo de otro usuario */
     @Test
-    void testActualizarUsuarioConEstadoInvalido() throws Exception {
-        System.out.println("Ejecutando testActualizarUsuarioConEstadoInvalido");
+    void testActualizarUsuarioConEmailDeOtroUsuario() throws Exception {
+        System.out.println("Ejecutando testActualizarUsuarioConEmailDeOtroUsuario");
         String id = crearUsuarioDePrueba();
         String json = """
                 {
-                  "sNombreCompleto": "Jorge Vidal Prueba",
-                  "sEmail": "jorge.vidal.prueba@utp.edu.pe",
-                  "sEstado": "SUSPENDIDO"
+                  "sNombres": "Jorge",
+                  "sApellidos": "Vidal Prueba",
+                  "sEmail": "julio.admin@utp.edu.pe",
+                  "sTelefono": ""
                 }
                 """;
-        URI uri = new URI("/api/usuarios/" + id);
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.put(uri)
+        MvcResult result = put("/api/usuarios/" + id, json);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+        assertTrue(result.getResponse().getContentAsString().contains("Ya existe un usuario con el email"));
+    }
+
+    /* 13° Test: Desactivar un usuario */
+    @Test
+    void testDesactivarUsuario() throws Exception {
+        System.out.println("Ejecutando testDesactivarUsuario");
+        String id = crearUsuarioDePrueba();
+        MvcResult result = put("/api/usuarios/" + id + "/estado", "{\"sEstado\": \"INACTIVO\"}");
+        assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
+        assertTrue(result.getResponse().getContentAsString().contains("\"sEstado\":\"INACTIVO\""));
+    }
+
+    /* 14° Test: Cambiar a un estado inválido */
+    @Test
+    void testCambiarEstadoInvalido() throws Exception {
+        System.out.println("Ejecutando testCambiarEstadoInvalido");
+        String id = crearUsuarioDePrueba();
+        MvcResult result = put("/api/usuarios/" + id + "/estado", "{\"sEstado\": \"SUSPENDIDO\"}");
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+    }
+
+    /* 15° Test: Un usuario no puede desactivar su propia cuenta */
+    @Test
+    @WithMockUser(username = "jorge.vidal.prueba@utp.edu.pe")
+    void testNoSePuedeDesactivarLaPropiaCuenta() throws Exception {
+        System.out.println("Ejecutando testNoSePuedeDesactivarLaPropiaCuenta");
+        String id = crearUsuarioDePrueba();
+        MvcResult result = put("/api/usuarios/" + id + "/estado", "{\"sEstado\": \"INACTIVO\"}");
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+        assertTrue(result.getResponse().getContentAsString().contains("propia cuenta"));
+    }
+
+    private MvcResult put(String ruta, String json) throws Exception {
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.put(new URI(ruta))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json)
                 .accept(MediaType.APPLICATION_JSON);
-        MvcResult result = mockMvc.perform(req).andReturn();
-        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+        return mockMvc.perform(req).andReturn();
     }
 }

@@ -3,6 +3,7 @@ package pe.edu.utp.uniticket_backend.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.utp.uniticket_backend.dto.UsuarioCreateDTO;
 import pe.edu.utp.uniticket_backend.dto.UsuarioDTO;
+import pe.edu.utp.uniticket_backend.dto.UsuarioEstadoDTO;
 import pe.edu.utp.uniticket_backend.dto.UsuarioUpdateDTO;
 import pe.edu.utp.uniticket_backend.service.UsuarioService;
 
@@ -57,5 +59,15 @@ public class UsuarioController {
             @Valid @RequestBody UsuarioUpdateDTO datos) {
         UsuarioDTO usuarioActualizado = usuarioService.actualizarUsuario(id, datos);
         return ResponseEntity.ok(usuarioActualizado);
+    }
+
+    /* 5° Rest: Activar o desactivar Usuario */
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<UsuarioDTO> cambiarEstado(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody UsuarioEstadoDTO datos,
+            Authentication authentication) {
+        UsuarioDTO usuario = usuarioService.cambiarEstado(id, datos.sEstado(), authentication.getName());
+        return ResponseEntity.ok(usuario);
     }
 }

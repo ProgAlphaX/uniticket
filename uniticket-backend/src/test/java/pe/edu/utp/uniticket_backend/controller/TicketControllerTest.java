@@ -40,7 +40,8 @@ class TicketControllerTest {
     private String crearUsuarioDePrueba(String rol) throws Exception {
         String json = """
                 {
-                  "sNombreCompleto": "Usuario Prueba %s",
+                  "sNombres": "Usuario",
+                  "sApellidos": "Prueba %s",
                   "sEmail": "prueba.%s@utp.edu.pe",
                   "sDni": "70011122",
                   "sTelefono": "987654321",

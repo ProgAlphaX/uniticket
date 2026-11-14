@@ -1,7 +1,11 @@
 package pe.edu.utp.uniticket_backend.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import pe.edu.utp.uniticket_backend.dto.UsuarioCreateDTO;
 import pe.edu.utp.uniticket_backend.dto.UsuarioDTO;
 import pe.edu.utp.uniticket_backend.dto.UsuarioUpdateDTO;
@@ -9,14 +13,13 @@ import pe.edu.utp.uniticket_backend.exception.ResourceNotFoundException;
 import pe.edu.utp.uniticket_backend.model.Usuario;
 import pe.edu.utp.uniticket_backend.repository.UsuarioRepository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 @Service
 public class UsuarioService {
+
     private static final List<String> ESTADOS_VALIDOS = List.of("ACTIVO", "INACTIVO");
     private static final List<String> ROLES_VALIDOS = List.of("ADMIN", "ESTANDAR");
     private static final String ESTADO_ACTIVO = "ACTIVO";
+    private static final String ESTADO_INACTIVO = "INACTIVO";
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
@@ -33,13 +36,15 @@ public class UsuarioService {
         List<Usuario> usuarios = estado == null
                 ? usuarioRepository.findAll()
                 : usuarioRepository.findBysEstado(estado.toUpperCase());
-        return usuarios.stream()
-                .map(this::mapearADTO)
-                .toList();
+        return usuarios.stream().map(this::mapearADTO).toList();
     }
 
     public List<UsuarioDTO> buscarPorNombre(String nombre) {
-        return usuarioRepository.findBysNombreCompletoContainingIgnoreCase(nombre).stream()
+        String texto = nombre.trim();
+        return java.util.stream.Stream.concat(
+                        usuarioRepository.findBysNombresContainingIgnoreCase(texto).stream(),
+                        usuarioRepository.findBysApellidosContainingIgnoreCase(texto).stream())
+                .distinct()
                 .map(this::mapearADTO)
                 .toList();
     }
@@ -48,14 +53,12 @@ public class UsuarioService {
         if (!ROLES_VALIDOS.contains(datos.sRol().toUpperCase())) {
             throw new IllegalArgumentException("Rol no válido: " + datos.sRol());
         }
-        if (usuarioRepository.findBysEmail(datos.sEmail()).isPresent()) {
-            throw new IllegalArgumentException("Ya existe un usuario con el email: " + datos.sEmail());
-        }
-
+        validarEmailDisponible(datos.sEmail(), null);
         Usuario usuario = new Usuario(
                 null,
-                datos.sNombreCompleto(),
-                datos.sEmail(),
+                datos.sNombres().trim(),
+                datos.sApellidos().trim(),
+                datos.sEmail().trim(),
                 datos.sDni(),
                 datos.sTelefono(),
                 passwordEncoder.encode(datos.sPassword()),
@@ -63,30 +66,50 @@ public class UsuarioService {
                 ESTADO_ACTIVO,
                 LocalDateTime.now()
         );
-
-        Usuario guardado = usuarioRepository.save(usuario);
-        return mapearADTO(guardado);
+        return mapearADTO(usuarioRepository.save(usuario));
     }
 
     public UsuarioDTO actualizarUsuario(Long id, UsuarioUpdateDTO datos) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
+        Usuario usuario = buscar(id);
+        validarEmailDisponible(datos.sEmail(), id);
+        usuario.setSNombres(datos.sNombres().trim());
+        usuario.setSApellidos(datos.sApellidos().trim());
+        usuario.setSEmail(datos.sEmail().trim());
+        usuario.setSTelefono(datos.sTelefono());
+        return mapearADTO(usuarioRepository.save(usuario));
+    }
 
-        if (!ESTADOS_VALIDOS.contains(datos.sEstado().toUpperCase())) {
-            throw new IllegalArgumentException("Estado no válido: " + datos.sEstado());
+    public UsuarioDTO cambiarEstado(Long id, String estado, String emailSolicitante) {
+        String nuevoEstado = estado.toUpperCase();
+        if (!ESTADOS_VALIDOS.contains(nuevoEstado)) {
+            throw new IllegalArgumentException("Estado no válido: " + estado);
         }
+        Usuario usuario = buscar(id);
+        if (ESTADO_INACTIVO.equals(nuevoEstado) && usuario.getSEmail().equalsIgnoreCase(emailSolicitante)) {
+            throw new IllegalArgumentException("No puedes desactivar tu propia cuenta");
+        }
+        usuario.setSEstado(nuevoEstado);
+        return mapearADTO(usuarioRepository.save(usuario));
+    }
 
-        usuario.setSNombreCompleto(datos.sNombreCompleto());
-        usuario.setSEmail(datos.sEmail());
-        usuario.setSEstado(datos.sEstado().toUpperCase());
+    private Usuario buscar(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
+    }
 
-        Usuario actualizado = usuarioRepository.save(usuario);
-        return mapearADTO(actualizado);
+    private void validarEmailDisponible(String email, Long idActual) {
+        usuarioRepository.findBysEmail(email.trim())
+                .filter(existente -> !existente.getNId_Usuario().equals(idActual))
+                .ifPresent(existente -> {
+                    throw new IllegalArgumentException("Ya existe un usuario con el email: " + email);
+                });
     }
 
     private UsuarioDTO mapearADTO(Usuario usuario) {
         return new UsuarioDTO(
                 usuario.getNId_Usuario(),
+                usuario.getSNombres(),
+                usuario.getSApellidos(),
                 usuario.getSNombreCompleto(),
                 usuario.getSEmail(),
                 usuario.getSDni(),

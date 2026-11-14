@@ -16,8 +16,11 @@ public class Usuario {
     @Column(name = "nid_usuario")
     private Long nId_Usuario;
 
-    @Column(name = "snombrecompleto", nullable = false, length = 150)
-    private String sNombreCompleto;
+    @Column(name = "snombres", nullable = false, length = 80)
+    private String sNombres;
+
+    @Column(name = "sapellidos", nullable = false, length = 80)
+    private String sApellidos;
 
     @Column(name = "semail", nullable = false, unique = true, length = 100)
     private String sEmail;
@@ -43,11 +46,12 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Usuario(Long nId_Usuario, String sNombreCompleto, String sEmail, String sDni,
+    public Usuario(Long nId_Usuario, String sNombres, String sApellidos, String sEmail, String sDni,
             String sTelefono, String sPasswordHash, String sRol, String sEstado,
             LocalDateTime dFecha_Creacion) {
         this.nId_Usuario = nId_Usuario;
-        this.sNombreCompleto = sNombreCompleto;
+        this.sNombres = sNombres;
+        this.sApellidos = sApellidos;
         this.sEmail = sEmail;
         this.sDni = sDni;
         this.sTelefono = sTelefono;
@@ -65,12 +69,24 @@ public class Usuario {
         this.nId_Usuario = nId_Usuario;
     }
 
-    public String getSNombreCompleto() {
-        return sNombreCompleto;
+    public String getSNombres() {
+        return sNombres;
     }
 
-    public void setSNombreCompleto(String sNombreCompleto) {
-        this.sNombreCompleto = sNombreCompleto;
+    public void setSNombres(String sNombres) {
+        this.sNombres = sNombres;
+    }
+
+    public String getSApellidos() {
+        return sApellidos;
+    }
+
+    public void setSApellidos(String sApellidos) {
+        this.sApellidos = sApellidos;
+    }
+
+    public String getSNombreCompleto() {
+        return sNombres + " " + sApellidos;
     }
 
     public String getSEmail() {
