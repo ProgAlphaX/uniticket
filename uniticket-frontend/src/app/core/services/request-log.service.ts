@@ -25,7 +25,7 @@ export class RequestLogService {
       url: req.urlWithParams,
       status,
       autorizacion: req.headers.get('Authorization'),
-      enviado: req.body,
+      enviado: this.ocultarPassword(req.body),
       respuesta,
       ms: Math.round(ms),
     };
@@ -34,5 +34,12 @@ export class RequestLogService {
 
   limpiar(): void {
     this.entradas.set([]);
+  }
+
+  private ocultarPassword(body: unknown): unknown {
+    if (body && typeof body === 'object' && 'sPassword' in body) {
+      return { ...body, sPassword: '••••••' };
+    }
+    return body;
   }
 }
