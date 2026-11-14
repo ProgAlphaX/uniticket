@@ -1,0 +1,24 @@
+/* Tailwind v4 sin preflight para no pisar los estilos de Angular Material */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --font-head: "Nunito", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-brand: #3b4fd8;
+  --color-brand-dark: #2d3eb5;
+  --color-brand-soft: #eef0ff;
+
+  --color-ink: #1b2040;
+  --color-ink-2: #424866;
+  --color-ink-3: #62688a;
+  --color-line: #e2e5f0;
+  --color-paper: #f3f4fa;
+
+  --color-pendiente: #f08c00;
+  --color-proceso: #3b63f0;
+  --color-observado: #9b4ddb;
+  --color-procede: #1f9d57;
+  --color-noprocede: #e5484d;
+}
