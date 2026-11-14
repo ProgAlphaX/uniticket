@@ -129,17 +129,18 @@ uniticket/
 
 ### 1. Backend · `http://localhost:8080`
 
+Las credenciales no están en el repositorio. Copia `.env.example` como `.env` dentro de `uniticket-backend/` y completa los valores (pídelos al equipo):
+
+```bash
+DB_URL=jdbc:postgresql://<host>/<base>?sslmode=require
+DB_USERNAME=<usuario>
+DB_PASSWORD=<contraseña>
+JWT_SECRET=<clave de al menos 32 caracteres>
+```
+
 ```bash
 cd uniticket-backend
 ./gradlew bootRun          # en Windows: gradlew.bat bootRun
-```
-
-La conexión a la base de datos se puede definir con variables de entorno (Spring Boot las toma por encima de `application.properties`):
-
-```bash
-SPRING_DATASOURCE_URL=jdbc:postgresql://<host>/<base>?sslmode=require
-SPRING_DATASOURCE_USERNAME=<usuario>
-SPRING_DATASOURCE_PASSWORD=<contraseña>
 ```
 
 ### 2. Frontend · `http://localhost:4200`
@@ -152,12 +153,17 @@ ng serve
 
 > El backend acepta peticiones desde `http://localhost:4200` (CORS). Inicia sesión y el frontend envía el token JWT en cada petición.
 
-### Pruebas del backend
+### Pruebas
 
 ```bash
 cd uniticket-backend
-./gradlew test
+./gradlew test             # JUnit 5 + MockMvc
+
+cd uniticket-frontend
+npm test                   # Jasmine + Karma
 ```
+
+> En desarrollo, la tecla **R** abre la consola de red de la app con cada petición, su token y su respuesta.
 
 ---
 
