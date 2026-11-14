@@ -1,0 +1,36 @@
+@if (abierto()) {
+  <aside class="panel" aria-label="Consola de red">
+    <header>
+      <div>
+        <h3>Consola de red</h3>
+        <small>Tecla R para abrir o cerrar</small>
+      </div>
+      <button matButton="outlined" (click)="log.limpiar()">Limpiar</button>
+      <button matIconButton aria-label="Cerrar consola" (click)="abierto.set(false)">
+        <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+      </button>
+    </header>
+    <div class="lista">
+      @for (e of log.entradas(); track e.id; let primero = $first) {
+        <details [open]="primero">
+          <summary>
+            <span class="metodo metodo--{{ e.metodo }}">{{ e.metodo }}</span>
+            <span class="url">{{ e.url }}</span>
+            <span class="status" [class.error]="e.status >= 400">{{ e.status }}</span>
+            <span class="ms">{{ e.ms }} ms</span>
+          </summary>
+          <h5>Authorization</h5>
+          <pre>{{ token(e.autorizacion) }}</pre>
+          @if (e.metodo !== 'GET') {
+            <h5>Body enviado</h5>
+            <pre>{{ e.enviado | json }}</pre>
+          }
+          <h5>Respuesta</h5>
+          <pre>{{ e.respuesta | json }}</pre>
+        </details>
+      } @empty {
+        <p class="vacio">Todavía no hay peticiones.</p>
+      }
+    </div>
+  </aside>
+}

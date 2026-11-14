@@ -1,0 +1,23 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 104px;
+  padding: 6px 12px;
+  border: 1px solid;
+  border-radius: 999px;
+  font: 800 11px/1 'Nunito', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+:host(.pill--PENDIENTE) { background: #fff3e2; color: #9a4f00; border-color: #f6c887; }
+:host(.pill--EN_PROCESO) { background: #eaf0ff; color: #2245c2; border-color: #b7c7ff; }
+:host(.pill--OBSERVADO) { background: #f5ecff; color: #7428b4; border-color: #d8b6f6; }
+:host(.pill--PROCEDE),
+:host(.pill--ACTIVO) { background: #e4f7ec; color: #13714a; border-color: #a5dfbf; }
+:host(.pill--NO_PROCEDE) { background: #fdeceb; color: #b3261e; border-color: #f4b4ae; }
+:host(.pill--INACTIVO) { background: #eceef6; color: #62688a; border-color: #e2e5f0; }
+:host(.pill--ACTIVO),
+:host(.pill--INACTIVO) { min-width: 84px; }

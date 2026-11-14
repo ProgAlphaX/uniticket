@@ -1,0 +1,113 @@
+.panel {
+  position: fixed;
+  z-index: 1000;
+  inset: 0 0 0 auto;
+  width: min(470px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: #161a33;
+  color: #dce0f5;
+  font-size: 13px;
+  box-shadow: -20px 0 40px -30px rgba(0, 0, 0, 0.6);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 12px 18px;
+  border-bottom: 1px solid #2a3058;
+
+  div {
+    flex: 1;
+  }
+
+  h3 {
+    color: #fff;
+    font-size: 15px;
+  }
+
+  small {
+    color: #9aa1c7;
+  }
+
+  button {
+    color: #dce0f5;
+  }
+}
+
+.lista {
+  flex: 1;
+  overflow: auto;
+}
+
+details {
+  border-bottom: 1px solid #232953;
+  padding: 0 14px 10px;
+}
+
+summary {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0 0;
+  cursor: pointer;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metodo {
+  padding: 3px 6px;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: 700;
+  background: #2a3058;
+}
+
+.metodo--GET { color: #9db4ff; }
+.metodo--POST { color: #8fe0ae; }
+.metodo--PUT { color: #ffb86b; }
+
+.status {
+  color: #8fe0ae;
+}
+
+.status.error {
+  color: #ffa29a;
+}
+
+.ms {
+  color: #8189b0;
+}
+
+h5 {
+  margin: 10px 0 4px;
+  color: #9aa1c7;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+pre {
+  margin: 0;
+  padding: 10px;
+  max-height: 220px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #0f1228;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 11.5px;
+}
+
+.vacio {
+  padding: 40px 20px;
+  text-align: center;
+  color: #9aa1c7;
+}

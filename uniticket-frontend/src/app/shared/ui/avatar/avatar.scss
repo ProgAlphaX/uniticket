@@ -1,0 +1,18 @@
+:host {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  font: 800 13px/1 'Nunito', sans-serif;
+}
+
+:host(.avatar--sm) { width: 32px; height: 32px; font-size: 12px; }
+:host(.avatar--md) { width: 36px; height: 36px; }
+:host(.avatar--lg) { width: 48px; height: 48px; font-size: 16px; }
+
+:host(.avatar--0) { background: #e3e7ff; color: #2d3eb5; }
+:host(.avatar--1) { background: #ddf5f1; color: #0b6f63; }
+:host(.avatar--2) { background: #ffebd2; color: #8f4a00; }
+:host(.avatar--3) { background: #fbe1ee; color: #a0275f; }
+:host(.avatar--4) { background: #ede3ff; color: #5e2ea8; }
+:host(.avatar--5) { background: #e2f2ff; color: #1d5d96; }
