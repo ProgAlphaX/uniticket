@@ -39,6 +39,9 @@ public class Ticket {
     @Column(name = "dfecha_creacion", nullable = false)
     private LocalDateTime dFecha_Creacion;
 
+    @Column(name = "dfecha_actualizacion", nullable = false)
+    private LocalDateTime dFecha_Actualizacion;
+
     public Ticket() {
     }
 
@@ -116,5 +119,13 @@ public class Ticket {
 
     public void setDFecha_Creacion(LocalDateTime dFecha_Creacion) {
         this.dFecha_Creacion = dFecha_Creacion;
+    }
+
+    public LocalDateTime getDFecha_Actualizacion() {
+        return dFecha_Actualizacion;
+    }
+
+    public void setDFecha_Actualizacion(LocalDateTime dFecha_Actualizacion) {
+        this.dFecha_Actualizacion = dFecha_Actualizacion;
     }
 }

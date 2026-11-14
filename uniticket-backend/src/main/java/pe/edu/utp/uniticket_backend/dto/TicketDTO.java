@@ -10,6 +10,7 @@ public record TicketDTO(
         String sAsunto,
         String sDescripcion,
         String sEstado,
-        LocalDateTime dFecha_Creacion
+        LocalDateTime dFecha_Creacion,
+        LocalDateTime dFecha_Actualizacion
 ) {
 }

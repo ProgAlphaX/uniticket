@@ -1,6 +1,7 @@
 package pe.edu.utp.uniticket_backend.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record TicketDetalleDTO(
         Long nId_Ticket,
@@ -11,12 +12,7 @@ public record TicketDetalleDTO(
         String sDescripcion,
         String sEstado,
         LocalDateTime dFecha_Creacion,
-        ResolucionDTO resolucion
+        LocalDateTime dFecha_Actualizacion,
+        List<SeguimientoDTO> seguimiento
 ) {
-    public record ResolucionDTO(
-            Long nId_Resolucion,
-            Long nId_Admin,
-            String sTexto_Respuesta,
-            LocalDateTime dFecha_Respuesta
-    ) {}
 }
