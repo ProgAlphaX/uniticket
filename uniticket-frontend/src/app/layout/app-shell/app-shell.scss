@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  height: 100dvh;
+}
+
+.contenedor {
+  height: 100%;
+  background: var(--ut-paper);
+}
+
+.menu {
+  border-right: 1px solid var(--ut-line);
+}
+
+.avisos {
+  width: min(420px, 100vw);
+  border-radius: 22px 0 0 22px;
+}
+
+.contenido {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+@media (max-width: 639.98px) {
+  .avisos {
+    border-radius: 0;
+  }
+}

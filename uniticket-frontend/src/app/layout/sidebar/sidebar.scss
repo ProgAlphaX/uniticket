@@ -1,0 +1,103 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  width: 248px;
+  padding: 18px 14px;
+  background: var(--ut-surface);
+}
+
+:host(.compacto) {
+  width: 84px;
+  padding: 14px 10px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 8px 14px;
+  color: var(--ut-ink);
+  text-decoration: none;
+}
+
+:host(.compacto) .marca {
+  justify-content: center;
+  padding: 2px 0 10px;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--ut-brand);
+  color: #fff;
+  font: 800 18px/1 'Nunito', sans-serif;
+}
+
+.nombre {
+  font: 800 18px/1 'Nunito', sans-serif;
+}
+
+nav {
+  display: grid;
+  gap: 4px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--ut-ink-2);
+  font: 700 14.5px/1 'Nunito Sans', sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: #f8f9fd;
+    color: var(--ut-ink);
+  }
+
+  &.activo {
+    background: #eef0ff;
+    color: var(--ut-brand);
+  }
+
+  &.destacado {
+    background: var(--ut-brand);
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(59, 79, 216, 0.5);
+
+    &:hover {
+      background: #2d3eb5;
+    }
+
+    &.activo {
+      box-shadow: 0 0 0 3px #dce1ff;
+    }
+  }
+}
+
+:host(.compacto) .item {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 56px;
+  padding: 6px;
+  border-radius: 14px;
+  font-size: 11px;
+  text-align: center;
+}
+
+.salir {
+  margin-top: auto;
+}

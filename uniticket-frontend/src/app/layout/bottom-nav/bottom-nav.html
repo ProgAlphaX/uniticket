@@ -1,0 +1,13 @@
+<nav aria-label="Navegación">
+  @for (item of items(); track item.ruta) {
+    <a
+      [routerLink]="item.ruta"
+      [class.destacado]="item.destacado"
+      [class.activo]="activo(item, urlActual())"
+      [attr.aria-current]="activo(item, urlActual()) ? 'page' : null"
+    >
+      <span class="icono"><mat-icon fontSet="material-symbols-rounded">{{ item.icono }}</mat-icon></span>
+      {{ item.corta }}
+    </a>
+  }
+</nav>

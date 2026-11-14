@@ -1,0 +1,28 @@
+<div class="izquierda">
+  @if (datos().volver; as volver) {
+    <a matIconButton [routerLink]="volver" aria-label="Volver">
+      <mat-icon fontSet="material-symbols-rounded">arrow_back</mat-icon>
+    </a>
+  }
+  <h1>{{ datos().titulo }}</h1>
+</div>
+
+<div class="derecha">
+  <!-- Diego: aquí va <ut-notification-bell (abrir)="abrirAvisos.emit()" /> -->
+
+  @if (usuario(); as u) {
+    @if (!esMovil()) {
+      <div class="perfil">
+        <ut-avatar [id]="u.nId_Usuario" [nombres]="u.sNombres" [apellidos]="u.sApellidos" tamano="sm" />
+        <span>
+          <b>{{ nombreCorto() }}</b>
+          <small>{{ rol() }}</small>
+        </span>
+      </div>
+    } @else {
+      <button matIconButton type="button" aria-label="Cerrar sesión" (click)="salir()">
+        <mat-icon fontSet="material-symbols-rounded">logout</mat-icon>
+      </button>
+    }
+  }
+</div>

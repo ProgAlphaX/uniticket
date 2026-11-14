@@ -1,0 +1,27 @@
+<a class="marca" routerLink="/inicio" aria-label="UniTicket, inicio">
+  <span class="logo">U</span>
+  @if (!compacto()) {
+    <span class="nombre">UniTicket</span>
+  }
+</a>
+
+<nav aria-label="Menú principal">
+  @for (item of items(); track item.ruta) {
+    <a
+      class="item"
+      [class.destacado]="item.destacado"
+      [class.activo]="activo(item, urlActual())"
+      [attr.aria-current]="activo(item, urlActual()) ? 'page' : null"
+      [routerLink]="item.ruta"
+      [attr.title]="compacto() ? item.etiqueta : null"
+    >
+      <mat-icon fontSet="material-symbols-rounded">{{ item.icono }}</mat-icon>
+      <span>{{ compacto() ? item.corta : item.etiqueta }}</span>
+    </a>
+  }
+</nav>
+
+<button class="item salir" type="button" (click)="salir()" [attr.title]="compacto() ? 'Cerrar sesión' : null">
+  <mat-icon fontSet="material-symbols-rounded">logout</mat-icon>
+  <span>{{ compacto() ? 'Salir' : 'Cerrar sesión' }}</span>
+</button>

@@ -1,0 +1,54 @@
+nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 6px 6px 8px;
+  border-top: 1px solid var(--ut-line);
+  background: var(--ut-surface);
+}
+
+a {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 4px;
+  color: var(--ut-ink-3);
+  font: 700 11.5px/1.1 'Nunito Sans', sans-serif;
+  text-decoration: none;
+}
+
+.icono {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 30px;
+  border-radius: 999px;
+  transition: background-color 0.15s;
+}
+
+a.activo {
+  color: var(--ut-ink);
+
+  .icono {
+    background: #dce1ff;
+    color: var(--ut-brand);
+  }
+}
+
+a.destacado {
+  color: var(--ut-brand);
+
+  .icono {
+    width: 54px;
+    height: 54px;
+    margin-top: -26px;
+    border-radius: 18px;
+    background: var(--ut-brand);
+    color: #fff;
+    box-shadow: 0 8px 18px -6px rgba(59, 79, 216, 0.6), 0 0 0 4px var(--ut-surface);
+  }
+
+  &.activo .icono {
+    background: #2d3eb5;
+    color: #fff;
+  }
+}

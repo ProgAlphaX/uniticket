@@ -1,0 +1,21 @@
+<mat-sidenav-container class="contenedor">
+  @if (!esMovil()) {
+    <mat-sidenav mode="side" opened class="menu">
+      <ut-sidebar [compacto]="esTablet()" />
+    </mat-sidenav>
+  }
+
+  <mat-sidenav #avisos position="end" mode="over" class="avisos">
+    <!-- Diego: aquí va <ut-notification-drawer (cerrar)="avisos.close()" /> -->
+  </mat-sidenav>
+
+  <mat-sidenav-content class="contenido">
+    <ut-topbar [esMovil]="esMovil()" (abrirAvisos)="avisos.open()" />
+    <main>
+      <router-outlet />
+    </main>
+    @if (esMovil()) {
+      <ut-bottom-nav />
+    }
+  </mat-sidenav-content>
+</mat-sidenav-container>
