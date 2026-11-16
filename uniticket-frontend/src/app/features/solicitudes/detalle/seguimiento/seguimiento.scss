@@ -1,0 +1,63 @@
+:host { display: block; }
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 4px 20px 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.ev {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.bub {
+  border-radius: 4px 16px 16px 16px;
+  padding: 12px 14px;
+  background: #f8f9fd;
+  border: 1px solid var(--ut-line);
+}
+
+.who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 13px;
+  color: var(--ut-ink-3);
+
+  b { color: var(--ut-ink); font-weight: 700; font-size: 13.5px; }
+  ut-status-pill { min-width: 0; padding: 4px 9px; font-size: 10px; }
+}
+
+.txt {
+  margin: 6px 0 0;
+  color: var(--ut-ink);
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.ev.OBSERVADO .bub { background: #f5ecff; border-color: #d8b6f6; }
+.ev.PROCEDE .bub { background: #e4f7ec; border-color: #a5dfbf; }
+.ev.NO_PROCEDE .bub { background: #fdeceb; border-color: #f4b4ae; }
+.ev.RESPUESTA .bub { background: #eaf0ff; border-color: #b7c7ff; }
+
+.ev.sys {
+  align-items: center;
+  font-size: 13.5px;
+  color: var(--ut-ink-3);
+
+  b { color: var(--ut-ink-2); }
+}
+
+.dotc {
+  width: 36px;
+  display: grid;
+  place-items: center;
+
+  i { display: block; width: 10px; height: 10px; border-radius: 50%; background: #bcc2d8; }
+  i.proc { background: #3b63f0; }
+}

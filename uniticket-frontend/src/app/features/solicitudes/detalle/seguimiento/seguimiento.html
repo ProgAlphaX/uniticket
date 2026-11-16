@@ -1,0 +1,36 @@
+<ol class="feed">
+  @for (e of eventos(); track e.nId_Seguimiento) {
+    @switch (e.sAccion) {
+      @case ('REGISTRO') {
+        <li class="ev sys">
+          <span class="dotc"><i></i></span>
+          <span><b>{{ quien(e) }}</b> registró la solicitud · {{ fechaHora(e.dFecha) }}</span>
+        </li>
+      }
+      @case ('EN_PROCESO') {
+        <li class="ev sys">
+          <span class="dotc"><i class="proc"></i></span>
+          <span><b>{{ quien(e) }}</b> empezó a atenderla · {{ fechaHora(e.dFecha) }}</span>
+        </li>
+      }
+      @default {
+        <li class="ev" [class]="'ev ' + e.sAccion">
+          <ut-avatar [id]="e.nId_Usuario" [nombres]="nombres(e)" [apellidos]="apellidos(e)" tamano="sm" />
+          <div class="bub">
+            <div class="who">
+              <b>{{ quien(e) }}</b>
+              @if (e.sAccion === 'RESPUESTA') {
+                <span>respondió la observación</span>
+              } @else {
+                <ut-status-pill [estado]="$any(e.sAccion)" />
+              }
+              <span>· {{ fechaHora(e.dFecha) }}</span>
+            </div>
+            <p class="txt">{{ e.sComentario }}</p>
+          </div>
+        </li>
+      }
+    }
+  }
+</ol>
+<ng-content />

@@ -1,0 +1,33 @@
+:host { display: block; }
+
+form {
+  display: grid;
+  gap: 12px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid #eef0f7;
+}
+
+mat-form-field { width: 100%; }
+
+.foot { display: flex; justify-content: flex-end; }
+
+.alert {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fdeceb;
+  color: #7f1d1d;
+  font-size: 14px;
+
+  mat-icon { flex: none; color: #c62828; }
+  b { display: block; color: #c62828; }
+}
+
+.alert.obs {
+  background: #f5ecff;
+  color: var(--ut-ink-2);
+
+  mat-icon, b { color: #7428b4; }
+}

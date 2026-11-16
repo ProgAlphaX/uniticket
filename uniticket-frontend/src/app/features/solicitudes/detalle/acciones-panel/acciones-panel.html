@@ -1,0 +1,52 @@
+<section class="ut-card">
+  <header class="box-h"><h3>Acciones</h3><ut-status-pill [estado]="ticket().sEstado" /></header>
+  <div class="acts">
+    @switch (ticket().sEstado) {
+      @case ('PENDIENTE') {
+        <p>Nadie atiende esta solicitud todavía. Al atenderla pasa a <b>En proceso</b> y el estudiante recibe un aviso.</p>
+        <button matButton="filled" (click)="atender()" [disabled]="atendiendo()">
+          <mat-icon fontSet="material-symbols-rounded">play_circle</mat-icon>
+          {{ atendiendo() ? 'Procesando…' : 'Atender solicitud' }}
+        </button>
+      }
+      @case ('EN_PROCESO') {
+        <p>Revisa la solicitud y decide. Cada opción pide un comentario para el estudiante.</p>
+        <ng-container *ngTemplateOutlet="medidor" />
+        <button matButton="filled" class="btn-ok" (click)="decidir('PROCEDE')">
+          <mat-icon fontSet="material-symbols-rounded">check_circle</mat-icon>Procede
+        </button>
+        @if (observaciones() < MAX) {
+          <button matButton class="btn-obs" (click)="decidir('OBSERVADO')">
+            <mat-icon fontSet="material-symbols-rounded">flag</mat-icon>Observar ({{ observaciones() + 1 }} de {{ MAX }})
+          </button>
+        } @else {
+          <div class="alert obs">
+            <mat-icon fontSet="material-symbols-rounded">flag</mat-icon>
+            <span><b>Límite de observaciones alcanzado</b>Ya se observó {{ MAX }} veces. Si aún no cumple, declárala No procede.</span>
+          </div>
+        }
+        <button matButton="outlined" class="btn-no" (click)="decidir('NO_PROCEDE')">
+          <mat-icon fontSet="material-symbols-rounded">cancel</mat-icon>No procede
+        </button>
+      }
+      @case ('OBSERVADO') {
+        <p>Esperando la respuesta del estudiante. Si no responde, puedes cerrarla.</p>
+        <ng-container *ngTemplateOutlet="medidor" />
+        <button matButton="outlined" class="btn-no" (click)="decidir('NO_PROCEDE')">
+          <mat-icon fontSet="material-symbols-rounded">cancel</mat-icon>No procede
+        </button>
+      }
+      @default {
+        <p>Solicitud cerrada como <b>{{ ESTADOS[ticket().sEstado] }}</b>. Ya no admite cambios.</p>
+      }
+    }
+  </div>
+</section>
+
+<ng-template #medidor>
+  <div class="obs-meter" [attr.aria-label]="'Observaciones usadas: ' + observaciones() + ' de ' + MAX">
+    <span>Observaciones</span>
+    <span class="seg">@for (on of segmentos(); track $index) {<i [class.on]="on"></i>}</span>
+    <b>{{ observaciones() }} de {{ MAX }}</b>
+  </div>
+</ng-template>

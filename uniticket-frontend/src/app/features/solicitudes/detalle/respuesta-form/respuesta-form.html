@@ -1,0 +1,37 @@
+<form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <div class="alert obs" role="status">
+    <mat-icon fontSet="material-symbols-rounded">flag</mat-icon>
+    <span>
+      <b>Tu solicitud tiene una observación ({{ observaciones() }} de {{ MAX }})</b>
+      Responde para que el administrador continúe con el trámite.
+      @if (observaciones() >= MAX) {
+        Es la última observación permitida: si no se subsana, no procederá.
+      }
+    </span>
+  </div>
+
+  @if (error(); as msg) {
+    <div class="alert" role="alert">
+      <mat-icon fontSet="material-symbols-rounded">error</mat-icon>
+      <span><b>No se pudo enviar</b>{{ msg }}</span>
+    </div>
+  }
+
+  <mat-form-field appearance="outline">
+    <mat-label>Tu respuesta a la observación</mat-label>
+    <textarea matInput formControlName="sComentario" rows="3" maxlength="1000"></textarea>
+    <mat-hint align="end">{{ form.controls.sComentario.value.length }}/1000</mat-hint>
+    @if (form.controls.sComentario.hasError('required')) {
+      <mat-error>Este campo es obligatorio</mat-error>
+    } @else if (form.controls.sComentario.hasError('minlength')) {
+      <mat-error>Escribe al menos 10 caracteres</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="foot">
+    <button matButton="filled" type="submit" [disabled]="enviando()">
+      <mat-icon fontSet="material-symbols-rounded">send</mat-icon>
+      {{ enviando() ? 'Enviando…' : 'Enviar respuesta' }}
+    </button>
+  </div>
+</form>

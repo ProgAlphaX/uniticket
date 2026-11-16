@@ -1,4 +1,90 @@
-<ut-empty-state
-  titulo="Detalle de la solicitud (FRM-04 y FRM-05)"
-  mensaje="Pantalla en construcción. Responsable: Alexander. Ubicación: src/app/features/solicitudes/detalle/detalle-page/"
-/>
+@if (cargando()) {
+  <div class="ut-card slot" aria-busy="true" aria-label="Cargando">
+    @for (w of [92, 80, 68, 56, 44]; track w) {
+      <div class="skel" [style.width.%]="w"></div>
+    }
+  </div>
+} @else if (error(); as e) {
+  <div class="alert" role="alert">
+    <mat-icon fontSet="material-symbols-rounded">error</mat-icon>
+    <span><b>{{ e.status || '' }} · No se pudo cargar</b>{{ e.message }}</span>
+  </div>
+} @else if (ticket(); as t) {
+  <div class="det">
+    <div class="det-main">
+      <section class="ut-card dh">
+        <div class="dh-top"><span class="num">{{ t.sNum_Ticket }}</span><ut-status-pill [estado]="t.sEstado" /></div>
+        <h2>{{ t.sAsunto }}</h2>
+        <div class="meta">
+          <span><mat-icon fontSet="material-symbols-rounded">{{ ICONO_TIPO[t.sTipo] }}</mat-icon>{{ TIPOS[t.sTipo] }}</span>
+          <span><mat-icon fontSet="material-symbols-rounded">calendar_today</mat-icon>{{ fechaDia(t.dFecha_Creacion) }}</span>
+          @if (esAdmin()) {
+            <span><mat-icon fontSet="material-symbols-rounded">person</mat-icon>{{ nombreEstudiante() }}</span>
+          }
+        </div>
+        <ut-progress-stepper [ticket]="t" />
+      </section>
+
+      <section class="ut-card">
+        <header class="box-h"><h3>Descripción</h3></header>
+        <p class="desc">{{ t.sDescripcion }}</p>
+      </section>
+
+      <section class="ut-card">
+        <header class="box-h">
+          <h3><mat-icon fontSet="material-symbols-rounded">forum</mat-icon>Seguimiento</h3>
+          <small>{{ t.seguimiento.length }} eventos</small>
+        </header>
+        <ut-seguimiento [eventos]="t.seguimiento" [idUsuarioActual]="idUsuario()">
+          @if (!esAdmin() && t.sEstado === 'OBSERVADO') {
+            <ut-respuesta-form [ticket]="t" [observaciones]="observaciones()" (enviado)="actualizar($event)" />
+          }
+        </ut-seguimiento>
+      </section>
+    </div>
+
+    <aside class="det-side">
+      @if (esAdmin()) {
+        <ut-acciones-panel [ticket]="t" [nombreEstudiante]="nombreEstudiante()" (actualizado)="actualizar($event)" />
+
+        @if (estudiante(); as u) {
+          <section class="ut-card">
+            <header class="box-h"><h3>Estudiante</h3></header>
+            <div class="prof">
+              <ut-avatar [id]="u.nId_Usuario" [nombres]="u.sNombres" [apellidos]="u.sApellidos" tamano="lg" />
+              <div><b>{{ u.sNombres }} {{ u.sApellidos }}</b><small>Estudiante</small></div>
+            </div>
+            <ul class="kv">
+              <li><mat-icon fontSet="material-symbols-rounded">mail</mat-icon><div><small>Correo</small><span>{{ u.sEmail }}</span></div></li>
+              <li><mat-icon fontSet="material-symbols-rounded">badge</mat-icon><div><small>DNI</small><span>{{ u.sDni }}</span></div></li>
+              <li><mat-icon fontSet="material-symbols-rounded">smartphone</mat-icon><div><small>Celular</small><span>{{ u.sTelefono || '—' }}</span></div></li>
+            </ul>
+          </section>
+        }
+      } @else {
+        <section class="ut-card">
+          <header class="box-h"><h3>Estado actual</h3><ut-status-pill [estado]="t.sEstado" /></header>
+          <p class="estado-msg">
+            @switch (t.sEstado) {
+              @case ('PENDIENTE') { Tu solicitud está en cola. Te avisaremos cuando un administrador la atienda. }
+              @case ('EN_PROCESO') { Un administrador la está revisando. Te avisaremos cuando haya una decisión o una observación. }
+              @case ('OBSERVADO') { Falta información. Responde la observación en el seguimiento. }
+              @case ('PROCEDE') { Tu solicitud fue aprobada. Revisa las indicaciones del administrador. }
+              @case ('NO_PROCEDE') { Tu solicitud no procede. Revisa el motivo en el seguimiento. }
+            }
+          </p>
+        </section>
+      }
+
+      <section class="ut-card">
+        <header class="box-h"><h3>Datos</h3></header>
+        <ul class="kv">
+          <li><mat-icon fontSet="material-symbols-rounded">{{ ICONO_TIPO[t.sTipo] }}</mat-icon><div><small>Categoría</small><span>{{ TIPOS[t.sTipo] }}</span></div></li>
+          <li><mat-icon fontSet="material-symbols-rounded">calendar_today</mat-icon><div><small>Registrada</small><span>{{ fechaHora(t.dFecha_Creacion) }}</span></div></li>
+          <li><mat-icon fontSet="material-symbols-rounded">update</mat-icon><div><small>Última actualización</small><span>{{ fechaHora(t.dFecha_Actualizacion) }}</span></div></li>
+          <li><mat-icon fontSet="material-symbols-rounded">schedule</mat-icon><div><small>{{ cerrada() ? 'Tiempo de atención' : 'Tiempo abierta' }}</small><span>{{ dias() }} día(s)</span></div></li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+}

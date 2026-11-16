@@ -1,0 +1,60 @@
+:host { display: block; }
+
+.stepper {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid #eef0f7;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ut-ink-3);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    right: 50%;
+    width: 100%;
+    height: 3px;
+    background: var(--ut-line);
+  }
+  &:first-child::before { display: none; }
+}
+
+.c {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #bcc2d8;
+  color: var(--ut-ink-3);
+  font: 800 12px/1 'Nunito', sans-serif;
+
+  mat-icon { font-size: 17px; width: 17px; height: 17px; }
+}
+
+b { color: var(--ut-ink); font-weight: 700; font-size: 13px; }
+
+li.done::before,
+li.cur::before { background: var(--ut-brand); }
+
+li.done .c { background: var(--ut-brand); border-color: var(--ut-brand); color: #fff; }
+li.cur .c { border-color: var(--ut-brand); color: var(--ut-brand); box-shadow: 0 0 0 4px #eef0ff; }
+li.cur.OBSERVADO .c { border-color: #9b4ddb; color: #9b4ddb; box-shadow: 0 0 0 4px #f5ecff; }
+li.cur.PROCEDE .c { background: #1f9d57; border-color: #1f9d57; color: #fff; box-shadow: 0 0 0 4px #e4f7ec; }
+li.cur.NO_PROCEDE .c { background: #e5484d; border-color: #e5484d; color: #fff; box-shadow: 0 0 0 4px #fdeceb; }
