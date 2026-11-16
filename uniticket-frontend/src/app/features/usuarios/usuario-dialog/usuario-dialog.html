@@ -1,0 +1,154 @@
+<form [formGroup]="form" (ngSubmit)="guardar()" class="usuario-form">
+  <h2 mat-dialog-title>{{ isEditMode ? 'Editar usuario' : 'Crear usuario' }}</h2>
+
+  <mat-dialog-content class="dialog-content">
+    <p class="dialog-description">
+      @if (isEditMode) {
+        Actualiza los datos personales de esta cuenta.
+      } @else {
+        Completa los datos para registrar una cuenta nueva.
+      }
+    </p>
+
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Nombres</mat-label>
+        <input
+          matInput
+          formControlName="sNombres"
+          maxlength="80"
+          autocomplete="given-name"
+          required
+        />
+        @if (form.controls['sNombres'].hasError('required') && form.controls['sNombres'].touched) {
+          <mat-error>Ingresa los nombres.</mat-error>
+        } @else if (
+          form.controls['sNombres'].hasError('maxlength') && form.controls['sNombres'].touched
+        ) {
+          <mat-error>Usa como máximo 80 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Apellidos</mat-label>
+        <input
+          matInput
+          formControlName="sApellidos"
+          maxlength="80"
+          autocomplete="family-name"
+          required
+        />
+        @if (form.controls['sApellidos'].hasError('required') && form.controls['sApellidos'].touched) {
+          <mat-error>Ingresa los apellidos.</mat-error>
+        } @else if (
+          form.controls['sApellidos'].hasError('maxlength') && form.controls['sApellidos'].touched
+        ) {
+          <mat-error>Usa como máximo 80 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Correo electrónico</mat-label>
+        <input
+          matInput
+          type="email"
+          formControlName="sEmail"
+          maxlength="100"
+          autocomplete="email"
+          placeholder="correo@utp.edu.pe"
+          required
+        />
+        @if (form.controls['sEmail'].hasError('required') && form.controls['sEmail'].touched) {
+          <mat-error>Ingresa un correo electrónico.</mat-error>
+        } @else if (form.controls['sEmail'].hasError('email') && form.controls['sEmail'].touched) {
+          <mat-error>Ingresa un correo válido.</mat-error>
+        } @else if (
+          form.controls['sEmail'].hasError('maxlength') && form.controls['sEmail'].touched
+        ) {
+          <mat-error>Usa como máximo 100 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      @if (!isEditMode) {
+        <mat-form-field appearance="outline">
+          <mat-label>DNI</mat-label>
+          <input
+            matInput
+            type="text"
+            inputmode="numeric"
+            formControlName="sDni"
+            maxlength="8"
+            autocomplete="off"
+            placeholder="8 dígitos"
+            required
+          />
+          @if (form.controls['sDni'].hasError('required') && form.controls['sDni'].touched) {
+            <mat-error>Ingresa el DNI.</mat-error>
+          } @else if (form.controls['sDni'].hasError('pattern') && form.controls['sDni'].touched) {
+            <mat-error>El DNI debe tener exactamente 8 dígitos.</mat-error>
+          }
+        </mat-form-field>
+      }
+
+      <mat-form-field appearance="outline" [class.full-width]="isEditMode">
+        <mat-label>Celular (opcional)</mat-label>
+        <input
+          matInput
+          type="tel"
+          inputmode="numeric"
+          formControlName="sTelefono"
+          maxlength="9"
+          autocomplete="tel"
+          placeholder="987654321"
+        />
+        @if (
+          form.controls['sTelefono'].hasError('pattern') && form.controls['sTelefono'].touched
+        ) {
+          <mat-error>Debe tener 9 dígitos y empezar con 9.</mat-error>
+        }
+      </mat-form-field>
+
+      @if (!isEditMode) {
+        <mat-form-field appearance="outline">
+          <mat-label>Rol</mat-label>
+          <mat-select formControlName="sRol" required>
+            <mat-option value="ADMIN">Administrador</mat-option>
+            <mat-option value="ESTANDAR">Estudiante</mat-option>
+          </mat-select>
+          @if (form.controls['sRol'].hasError('required') && form.controls['sRol'].touched) {
+            <mat-error>Selecciona un rol.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña inicial</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="sPassword"
+            minlength="6"
+            autocomplete="new-password"
+            required
+          />
+          @if (
+            form.controls['sPassword'].hasError('required') && form.controls['sPassword'].touched
+          ) {
+            <mat-error>Ingresa una contraseña inicial.</mat-error>
+          } @else if (
+            form.controls['sPassword'].hasError('minlength') &&
+            form.controls['sPassword'].touched
+          ) {
+            <mat-error>La contraseña debe tener al menos 6 caracteres.</mat-error>
+          }
+        </mat-form-field>
+      }
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-button type="button" (click)="cancelar()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit">
+      {{ isEditMode ? 'Guardar cambios' : 'Crear usuario' }}
+    </button>
+  </mat-dialog-actions>
+</form>

@@ -40,7 +40,7 @@ public class UsuarioController {
     /* 2° Rest: Buscar Usuario por Nombre */
     @GetMapping("/buscar")
     public ResponseEntity<List<UsuarioDTO>> buscarPorNombre(
-            @RequestParam String nombre) {
+            @RequestParam(name = "nombre") String nombre) {
         List<UsuarioDTO> usuarios = usuarioService.buscarPorNombre(nombre);
         return ResponseEntity.ok(usuarios);
     }

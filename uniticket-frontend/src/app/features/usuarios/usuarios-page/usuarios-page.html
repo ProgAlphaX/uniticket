@@ -1,4 +1,174 @@
-<ut-empty-state
-  titulo="Usuarios (FRM-06, FRM-07 y FRM-08)"
-  mensaje="Pantalla en construcción. Responsable: Luis. Ubicación: src/app/features/usuarios/usuarios-page/"
-/>
+<section class="usuarios-page" aria-labelledby="usuarios-titulo">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Administración</p>
+      <h1 id="usuarios-titulo">Usuarios</h1>
+      <p class="page-description">Gestiona las cuentas de estudiantes y administradores.</p>
+    </div>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      class="new-user-button"
+      [disabled]="guardando()"
+      (click)="abrirCrear()"
+    >
+      <mat-icon fontSet="material-symbols-rounded">person_add</mat-icon>
+      Nuevo usuario
+    </button>
+  </header>
+
+  <form
+    [formGroup]="filtroForm"
+    (ngSubmit)="aplicarFiltros()"
+    class="filter-panel"
+    role="search"
+    aria-label="Buscar usuarios"
+  >
+    <mat-form-field appearance="outline" class="name-filter">
+      <mat-label>Buscar por nombre</mat-label>
+      <mat-icon matPrefix fontSet="material-symbols-rounded" aria-hidden="true">search</mat-icon>
+      <input
+        matInput
+        formControlName="nombre"
+        placeholder="Escribe un nombre o apellido"
+        autocomplete="off"
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="state-filter">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estado">
+        <mat-option value="">Todos</mat-option>
+        <mat-option value="ACTIVO">Activos</mat-option>
+        <mat-option value="INACTIVO">Inactivos</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" class="search-button">
+      <mat-icon fontSet="material-symbols-rounded">search</mat-icon>
+      Buscar
+    </button>
+  </form>
+
+  <section class="table-panel" aria-label="Listado de usuarios" [attr.aria-busy]="cargando()">
+    @if (errorCarga(); as error) {
+      <div class="state-message state-message--error" role="alert">
+        <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">error_outline</mat-icon>
+        <div>
+          <h2>No se pudo cargar la lista</h2>
+          <p>{{ error }}</p>
+          <button mat-stroked-button type="button" class="retry-button" (click)="aplicarFiltros()">
+            Reintentar
+          </button>
+        </div>
+      </div>
+    } @else if (cargando()) {
+      <div class="state-message" role="status" aria-live="polite">
+        <span class="loading-indicator" aria-hidden="true"></span>
+        <p>Cargando usuarios…</p>
+      </div>
+    } @else if (usuarios().length === 0) {
+      <ut-empty-state
+        titulo="No hay usuarios para mostrar"
+        mensaje="Prueba con otros filtros o crea un usuario nuevo."
+      />
+    } @else {
+      <div class="table-scroll">
+        <table mat-table [dataSource]="usuarios()" class="users-table">
+          <caption class="visually-hidden">Usuarios registrados en UniTicket</caption>
+
+          <ng-container matColumnDef="usuario">
+            <th mat-header-cell *matHeaderCellDef scope="col">Usuario</th>
+            <td mat-cell *matCellDef="let usuario">
+              <div class="user-cell">
+                <ut-avatar
+                  [id]="usuario.nId_Usuario"
+                  [nombres]="usuario.sNombres"
+                  [apellidos]="usuario.sApellidos"
+                  tamano="md"
+                />
+                <div class="user-details">
+                  <span class="user-name">{{ usuario.sNombres }} {{ usuario.sApellidos }}</span>
+                  <span class="user-email">{{ usuario.sEmail }}</span>
+                </div>
+                <span class="user-dni">DNI {{ usuario.sDni }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="celular">
+            <th mat-header-cell *matHeaderCellDef scope="col">Celular</th>
+            <td mat-cell *matCellDef="let usuario">{{ usuario.sTelefono || '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="rol">
+            <th mat-header-cell *matHeaderCellDef scope="col">Rol</th>
+            <td mat-cell *matCellDef="let usuario">
+              {{ usuario.sRol === 'ADMIN' ? 'Administrador' : 'Estudiante' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef scope="col">Estado</th>
+            <td mat-cell *matCellDef="let usuario">
+              <ut-status-pill [estado]="usuario.sEstado" />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef scope="col" class="actions-heading">Acciones</th>
+            <td mat-cell *matCellDef="let usuario">
+              <div class="row-actions">
+                <button
+                  type="button"
+                  class="prototype-button btn-out btn-sm"
+                  [disabled]="guardando()"
+                  [attr.aria-label]="'Editar a ' + usuario.sNombres + ' ' + usuario.sApellidos"
+                  (click)="abrirEditar(usuario)"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">edit</mat-icon>
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="prototype-button btn-sm"
+                  [class.btn-no]="usuario.sEstado === 'ACTIVO'"
+                  [class.btn-ton]="usuario.sEstado !== 'ACTIVO'"
+                  [disabled]="guardando()"
+                  [attr.aria-label]="
+                    (usuario.sEstado === 'ACTIVO' ? 'Desactivar a ' : 'Activar a ') +
+                    usuario.sNombres +
+                    ' ' +
+                    usuario.sApellidos
+                  "
+                  (click)="cambiarEstado(usuario)"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">
+                    {{ usuario.sEstado === 'ACTIVO' ? 'person_off' : 'person' }}
+                  </mat-icon>
+                  {{ usuario.sEstado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns"
+            class="user-row"
+          ></tr>
+        </table>
+      </div>
+
+      <footer class="table-footer" aria-live="polite">
+        <div class="status-counts">
+          <span>Activos <strong>{{ contarActivos() }}</strong></span>
+          <span>Inactivos <strong>{{ contarInactivos() }}</strong></span>
+        </div>
+        <span><strong>{{ usuarios().length }}</strong> usuarios</span>
+      </footer>
+    }
+  </section>
+</section>
