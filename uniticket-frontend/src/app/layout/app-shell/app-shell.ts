@@ -8,11 +8,12 @@ import { map } from 'rxjs';
 import { BottomNav } from '../bottom-nav/bottom-nav';
 import { Sidebar } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
+import { NotificationDrawer } from '../../features/notificaciones/notification-drawer/notification-drawer';
 
 /** Estructura de las pantallas privadas: menú, barra superior, contenido y panel de avisos a la derecha. */
 @Component({
   selector: 'ut-app-shell',
-  imports: [MatSidenavModule, RouterOutlet, Sidebar, BottomNav, Topbar],
+  imports: [MatSidenavModule, RouterOutlet, Sidebar, BottomNav, Topbar, NotificationDrawer],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

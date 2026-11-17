@@ -1,0 +1,14 @@
+<button
+  matIconButton
+  type="button"
+  aria-label="Notificaciones"
+  [matBadge]="noLeidas()"
+  [matBadgeHidden]="noLeidas() === 0"
+  matBadgeColor="warn"
+  (click)="abrirPanel()">
+
+  <mat-icon fontSet="material-symbols-rounded">
+    notifications
+  </mat-icon>
+
+</button>

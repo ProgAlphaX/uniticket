@@ -8,7 +8,15 @@
 </div>
 
 <div class="derecha">
-  <!-- Diego: aquí va <ut-notification-bell (abrir)="abrirAvisos.emit()" /> -->
+  <div class="derecha">
+  <ut-notification-bell
+    (abrir)="abrirAvisos.emit()">
+  </ut-notification-bell>
+
+  @if (usuario(); as u) {
+    ...
+  }
+</div>
 
   @if (usuario(); as u) {
     @if (!esMovil()) {

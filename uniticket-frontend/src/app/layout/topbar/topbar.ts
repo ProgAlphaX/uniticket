@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { NotificationBell } from '../../features/notificaciones/notification-bell/notification-bell';
 
 import { ROLES } from '../../core/config/catalogos';
 import { AuthService } from '../../core/services/auth.service';
@@ -16,7 +17,7 @@ interface DatosRuta {
 
 @Component({
   selector: 'ut-topbar',
-  imports: [RouterLink, MatButtonModule, MatIconModule, Avatar],
+  imports: [RouterLink, MatButtonModule, MatIconModule, Avatar, NotificationBell],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
