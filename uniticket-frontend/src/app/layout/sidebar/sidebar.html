@@ -9,7 +9,6 @@
   @for (item of items(); track item.ruta) {
     <a
       class="item"
-      [class.destacado]="item.destacado"
       [class.activo]="activo(item, urlActual())"
       [attr.aria-current]="activo(item, urlActual()) ? 'page' : null"
       [routerLink]="item.ruta"

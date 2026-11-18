@@ -18,10 +18,9 @@ export class Sidebar {
   private readonly auth = inject(AuthService);
   private readonly url = urlActual();
 
-  /** En tablet el menú se reduce a un riel de íconos. */
   readonly compacto = input(false);
 
-  protected readonly items = computed(() => itemsDeNavegacion(this.auth.esAdmin()));
+  protected readonly items = computed(() => itemsDeNavegacion(this.auth.esAdmin()).filter(item => !item.destacado));
   protected readonly activo = estaActivo;
   protected readonly urlActual = this.url;
 

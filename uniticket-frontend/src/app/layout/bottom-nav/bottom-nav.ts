@@ -6,7 +6,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { estaActivo, itemsDeNavegacion } from '../navegacion';
 import { urlActual } from '../url-actual';
 
-/** Barra inferior en celular. La acción destacada (Nueva) va al centro. */
 @Component({
   selector: 'ut-bottom-nav',
   imports: [RouterLink, MatIconModule],

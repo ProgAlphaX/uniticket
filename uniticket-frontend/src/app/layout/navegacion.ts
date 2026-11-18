@@ -3,7 +3,6 @@ export interface ItemNav {
   icono: string;
   etiqueta: string;
   corta: string;
-  /** Acción principal: va primero en el menú y al centro de la barra inferior. */
   destacado?: boolean;
 }
 
@@ -23,7 +22,6 @@ export function itemsDeNavegacion(esAdmin: boolean): ItemNav[] {
       ];
 }
 
-/** «Mis solicitudes» queda activo en la lista y en el detalle, pero no en «Nueva solicitud». */
 export function estaActivo(item: ItemNav, url: string): boolean {
   const ruta = url.split('?')[0];
   if (item.destacado || item.ruta === '/inicio') {
