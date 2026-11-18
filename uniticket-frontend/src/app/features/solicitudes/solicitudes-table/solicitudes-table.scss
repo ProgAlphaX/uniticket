@@ -1,0 +1,129 @@
+:host {
+  display: block;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  background: transparent;
+}
+
+th.mat-mdc-header-cell {
+  background: #f8f9fd;
+  color: var(--ut-ink-2);
+  font: 800 12px/1 'Nunito', sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fila {
+  cursor: pointer;
+  transition: background-color 0.12s;
+
+  &:hover {
+    background: #f8f9fd;
+  }
+}
+
+td.mat-mdc-cell {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.persona {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+b,
+small {
+  display: block;
+}
+
+b {
+  color: var(--ut-ink);
+  font-weight: 700;
+}
+
+small {
+  color: var(--ut-ink-3);
+  font-size: 12.5px;
+}
+
+.numero {
+  color: var(--ut-ink-3);
+  font: 800 12.5px/1 'Nunito', sans-serif;
+  white-space: nowrap;
+}
+
+.fecha {
+  white-space: nowrap;
+
+  small::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.solicitud {
+  max-width: 420px;
+
+  b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+}
+
+.punto {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.cabecera-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.accion {
+  text-align: right;
+}
+
+.ver {
+  background: #eef0ff;
+  color: var(--ut-brand);
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.solo-movil {
+  display: none;
+}
+
+@media (max-width: 899.98px) {
+  .solo-movil {
+    display: inline;
+  }
+
+  .solicitud {
+    max-width: 220px;
+  }
+}

@@ -1,91 +1,147 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { TicketService } from '../../solicitudes/data/ticket.service';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Router, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
+
+import { API_URL } from '../../../core/config/api';
+import {
+  ESTADO_ICONO,
+  ESTADOS,
+  ESTADOS_PLURAL,
+  EstadoTicket,
+  TIPO_ICONO,
+  TIPOS,
+  TipoTicket,
+} from '../../../core/config/catalogos';
+import { Ticket } from '../../../core/models/ticket';
+import { Usuario } from '../../../core/models/usuario';
 import { AuthService } from '../../../core/services/auth.service';
+import { esPantallaMovil } from '../../../layout/pantalla';
+import { Avatar } from '../../../shared/ui/avatar/avatar';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { StatusPill } from '../../../shared/ui/status-pill/status-pill';
+import { TicketService } from '../../solicitudes/data/ticket.service';
+import { BarChart, BarraDato } from '../bar-chart/bar-chart';
+import { StatCard } from '../stat-card/stat-card';
 
 @Component({
   selector: 'ut-inicio-page',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    DatePipe,
+    NgTemplateOutlet,
+    RouterLink,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    Avatar,
+    EmptyState,
+    StatusPill,
+    BarChart,
+    StatCard,
+  ],
   templateUrl: './inicio-page.html',
   styleUrl: './inicio-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InicioPage implements OnInit {
-  private ticketService = inject(TicketService);
-  public authService = inject(AuthService);
+export class InicioPage {
+  private readonly ticketService = inject(TicketService);
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
-  tickets = signal<any[]>([]);
-  loading = signal<boolean>(true);
+  protected readonly usuario = this.auth.usuario;
+  protected readonly esAdmin = this.auth.esAdmin;
+  protected readonly esMovil = esPantallaMovil();
+  protected readonly hoy = new Date();
+  protected readonly estados = Object.keys(ESTADOS) as EstadoTicket[];
+  protected readonly etiquetas = ESTADOS_PLURAL;
+  protected readonly iconos = ESTADO_ICONO;
+  protected readonly tipos = TIPOS;
+  protected readonly tipoIcono = TIPO_ICONO;
 
-  // Contadores por estado oficial de UniTicket
-  totalTickets = signal<number>(0);
-  pendientes = signal<number>(0);
-  enProceso = signal<number>(0);
-  observados = signal<number>(0);
-  procedes = signal<number>(0);
-  noProcedes = signal<number>(0);
+  protected readonly cargando = signal(true);
+  protected readonly error = signal(false);
+  private readonly tickets = signal<Ticket[]>([]);
+  private readonly usuarios = signal<Usuario[]>([]);
 
-  // Datos para el gráfico ut-bar-chart
-  categoriasStats = signal<{ key: string; label: string; count: number; percentage: number }[]>([]);
-  categoriaTop = signal<{ label: string; count: number; percentage: number } | null>(null);
+  protected readonly visibles = computed(() => {
+    const idUsuario = this.usuario()?.nId_Usuario;
+    return this.esAdmin() ? this.tickets() : this.tickets().filter(t => t.nId_Usuario === idUsuario);
+  });
 
-  ngOnInit() {
-    this.cargarDatos();
+  protected readonly conteo = computed(() => {
+    const conteo = { PENDIENTE: 0, EN_PROCESO: 0, OBSERVADO: 0, PROCEDE: 0, NO_PROCEDE: 0 } as Record<EstadoTicket, number>;
+    this.visibles().forEach(t => conteo[t.sEstado]++);
+    return conteo;
+  });
+
+  protected readonly abiertas = computed(
+    () => this.conteo().PENDIENTE + this.conteo().EN_PROCESO + this.conteo().OBSERVADO,
+  );
+  protected readonly usuariosActivos = computed(() => this.usuarios().filter(u => u.sEstado === 'ACTIVO').length);
+
+  protected readonly porAtender = computed(() =>
+    this.visibles()
+      .filter(t => t.sEstado === 'PENDIENTE')
+      .sort((a, b) => a.dFecha_Creacion.localeCompare(b.dFecha_Creacion))
+      .slice(0, 5),
+  );
+
+  protected readonly enCurso = computed(() =>
+    this.visibles()
+      .filter(t => t.sEstado === 'EN_PROCESO' || t.sEstado === 'OBSERVADO')
+      .sort((a, b) => a.dFecha_Actualizacion.localeCompare(b.dFecha_Actualizacion))
+      .slice(0, 5),
+  );
+
+  protected readonly observadas = computed(() => this.visibles().filter(t => t.sEstado === 'OBSERVADO'));
+  protected readonly ultimas = computed(() => this.visibles().slice(0, 5));
+
+  protected readonly grafico = computed<BarraDato[]>(() =>
+    (Object.keys(TIPOS) as TipoTicket[]).map(tipo => ({
+      clave: tipo,
+      etiqueta: TIPOS[tipo],
+      icono: TIPO_ICONO[tipo],
+      valor: this.visibles().filter(t => t.sTipo === tipo).length,
+    })),
+  );
+
+  protected readonly rutaLista = computed(() => (this.esAdmin() ? '/admin/solicitudes' : '/solicitudes'));
+
+  constructor() {
+    this.cargar();
   }
 
-  cargarDatos() {
-    this.loading.set(true);
-    this.ticketService.listar().subscribe({
-      next: (data) => {
-        this.tickets.set(data);
-        this.calcularMetricas(data);
-        this.loading.set(false);
+  protected cargar(): void {
+    this.cargando.set(true);
+    this.error.set(false);
+    forkJoin({
+      tickets: this.ticketService.listar(),
+      usuarios: this.http.get<Usuario[]>(`${API_URL}/usuarios`),
+    }).subscribe({
+      next: data => {
+        console.log('Datos recibidos del servicio:', data);
+        this.tickets.set(data.tickets);
+        this.usuarios.set(data.usuarios);
+        this.cargando.set(false);
       },
-      error: (err) => {
-        console.error('Error al cargar indicadores:', err);
-        this.loading.set(false);
-      }
+      error: err => {
+        console.error('Error al llamar al servicio:', err);
+        this.error.set(true);
+        this.cargando.set(false);
+      },
     });
   }
 
-  calcularMetricas(data: any[]) {
-    const isAdmin = this.authService.esAdmin?.() ?? false;
-    const lista = data; // Si es estudiante, el servicio o la vista puede filtrar; aquí tomamos el total o adaptamos según el rol
+  protected usuarioDe(id: number): Usuario | undefined {
+    return this.usuarios().find(u => u.nId_Usuario === id);
+  }
 
-    this.totalTickets.set(lista.length);
-    this.pendientes.set(lista.filter((t: any) => t.sEstado === 'PENDIENTE').length);
-    this.enProceso.set(lista.filter((t: any) => t.sEstado === 'EN_PROCESO').length);
-    this.observados.set(lista.filter((t: any) => t.sEstado === 'OBSERVADO').length);
-    this.procedes.set(lista.filter((t: any) => t.sEstado === 'PROCEDE').length);
-    this.noProcedes.set(lista.filter((t: any) => t.sEstado === 'NO_PROCEDE').length);
-
-    // Estadísticas para ut-bar-chart por categoría
-    const tiposMap: { [key: string]: { label: string; count: number } } = {
-      CERTIFICADO: { label: 'Certificado de estudios', count: 0 },
-      CITA_TUTOR: { label: 'Cita con tutor', count: 0 },
-      PENSION: { label: 'Pensión y pagos', count: 0 },
-      DOCUMENTOS: { label: 'Trámite de documentos', count: 0 }
-    };
-
-    lista.forEach((t: any) => {
-      if (tiposMap[t.sTipo]) {
-        tiposMap[t.sTipo].count++;
-      }
-    });
-
-    const totalCount = lista.length || 1;
-    const statsArray = Object.entries(tiposMap).map(([key, val]) => ({
-      key,
-      label: val.label,
-      count: val.count,
-      percentage: Math.round((val.count * 100) / totalCount)
-    })).sort((a, b) => b.count - a.count);
-
-    this.categoriasStats.set(statsArray);
-    if (statsArray.length > 0) {
-      this.categoriaTop.set(statsArray[0]);
-    }
+  protected verCategoria(tipo: string): void {
+    this.router.navigate([this.rutaLista()], { queryParams: { tipo } });
   }
 }

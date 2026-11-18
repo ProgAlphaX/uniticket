@@ -1,74 +1,61 @@
-<div class="container mt-4 mb-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2>Registrar Nueva Solicitud</h2>
-      <p class="text-muted">Selecciona una categoría y detalla tu requerimiento (FRM-02).</p>
-    </div>
-    <div>
-      <a routerLink="/solicitudes" class="btn btn-outline-secondary btn-sm">← Volver</a>
-    </div>
+<header class="saludo">
+  <h2>Nueva solicitud</h2>
+  <p>Elige la categoría y cuéntanos qué necesitas.</p>
+</header>
+
+<form class="ut-card" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <div class="cuerpo">
+    @if (errorApi(); as error) {
+      <div class="alerta" role="alert">
+        <mat-icon fontSet="material-symbols-rounded">error</mat-icon>
+        <span><b>No se pudo enviar</b>{{ error }}</span>
+      </div>
+    }
+
+    <fieldset>
+      <legend>1. Categoría <span class="requerido">*</span></legend>
+      <ut-category-picker
+        formControlName="sTipo"
+        [invalido]="form.controls.sTipo.invalid && form.controls.sTipo.touched"
+      />
+      @if (form.controls.sTipo.invalid && form.controls.sTipo.touched) {
+        <p class="error"><mat-icon fontSet="material-symbols-rounded">error</mat-icon>Elige una categoría</p>
+      }
+    </fieldset>
+
+    <p class="paso">2. Detalle</p>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Asunto</mat-label>
+      <input matInput formControlName="sAsunto" maxlength="150" />
+      <mat-hint align="end">{{ form.controls.sAsunto.value.length }}/150</mat-hint>
+      @if (form.controls.sAsunto.hasError('required')) {
+        <mat-error>Este campo es obligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="sDescripcion" rows="5" maxlength="1000"></textarea>
+      <mat-hint>Incluye fechas, códigos o números de operación si los tienes.</mat-hint>
+      <mat-hint align="end">{{ form.controls.sDescripcion.value.length }}/1000</mat-hint>
+      @if (form.controls.sDescripcion.hasError('required')) {
+        <mat-error>Este campo es obligatorio</mat-error>
+      } @else if (form.controls.sDescripcion.hasError('minlength')) {
+        <mat-error>Escribe al menos 20 caracteres</mat-error>
+      }
+    </mat-form-field>
   </div>
-  
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="card shadow-sm p-4">
-    
-    <!-- ut-category-picker: Selector de categorías en tarjetas -->
-    <div class="mb-4">
-      <label class="form-label fw-bold mb-3">1. Selecciona la Categoría <span class="text-danger">*</span></label>
-      
-      <div class="row g-3">
-        <div class="col-md-6" *ngFor="let cat of categorias">
-          <div class="card h-100 border-2 transition-all"
-               [class.border-primary]="form.get('sTipo')?.value === cat.id"
-               [class.bg-light]="form.get('sTipo')?.value === cat.id"
-               style="cursor: pointer;"
-               (click)="form.get('sTipo')?.setValue(cat.id)">
-            <div class="card-body d-flex align-items-start">
-              <div class="form-check mt-1 me-3">
-                <input class="form-check-input" type="radio" name="sTipo" [value]="cat.id" formControlName="sTipo" [id]="cat.id">
-              </div>
-              <div>
-                <label class="form-check-label fw-bold text-dark cursor-pointer mb-1" [for]="cat.id">
-                  {{ cat.nombre }}
-                </label>
-                <p class="text-muted small mb-0">{{ cat.descripcion }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div *ngIf="form.get('sTipo')?.invalid && form.get('sTipo')?.touched" class="text-danger small mt-2">
-        Debe seleccionar una categoría obligatoriamente.
-      </div>
-    </div>
-
-    <hr class="my-4">
-
-    <h5 class="mb-3">2. Detalle de la Solicitud</h5>
-
-    <!-- Asunto -->
-    <div class="mb-3">
-      <label for="sAsunto" class="form-label fw-semibold">Asunto <span class="text-danger">*</span></label>
-      <input type="text" id="sAsunto" formControlName="sAsunto" class="form-control" placeholder="Ej. Solicitud de constancia de matrícula">
-      <div *ngIf="form.get('sAsunto')?.invalid && form.get('sAsunto')?.touched" class="text-danger small mt-1">
-        El asunto es obligatorio (máx. 150 caracteres).
-      </div>
-    </div>
-
-    <!-- Descripción -->
-    <div class="mb-4">
-      <label for="sDescripcion" class="form-label fw-semibold">Descripción <span class="text-danger">*</span></label>
-      <textarea id="sDescripcion" formControlName="sDescripcion" rows="4" class="form-control" placeholder="Describa su solicitud detalladamente (entre 20 y 1000 caracteres)"></textarea>
-      <div class="form-text">Mínimo 20 caracteres, máximo 1000.</div>
-      <div *ngIf="form.get('sDescripcion')?.invalid && form.get('sDescripcion')?.touched" class="text-danger small mt-1">
-        La descripción es obligatoria y debe tener entre 20 y 1000 caracteres.
-      </div>
-    </div>
-
-    <!-- Botón de Envío -->
-    <div class="d-flex justify-content-end gap-2">
-      <a routerLink="/solicitudes" class="btn btn-outline-secondary">Cancelar</a>
-      <button type="submit" class="btn btn-primary px-4" [disabled]="form.invalid">Enviar Solicitud</button>
-    </div>
-  </form>
-</div>
+  <footer class="acciones">
+    <a matButton="outlined" routerLink="/solicitudes">Cancelar</a>
+    <button matButton="filled" type="submit" [disabled]="enviando()">
+      @if (enviando()) {
+        <mat-spinner diameter="18" />
+      } @else {
+        <mat-icon fontSet="material-symbols-rounded">send</mat-icon>
+      }
+      {{ enviando() ? 'Enviando…' : 'Enviar solicitud' }}
+    </button>
+  </footer>
+</form>

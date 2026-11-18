@@ -1,0 +1,63 @@
+:host {
+  display: inline-flex;
+}
+
+.contador {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--ut-brand);
+  color: #fff;
+  font: 800 11px/1 'Nunito', sans-serif;
+}
+
+.disparador {
+  --mat-icon-button-state-layer-size: 34px;
+  width: 34px;
+  height: 34px;
+  padding: 5px;
+}
+
+.disparador--activo {
+  background: #eef0ff;
+  color: var(--ut-brand);
+}
+
+.opciones {
+  display: grid;
+  min-width: 220px;
+  padding: 4px 8px;
+
+  hr {
+    margin: 4px 0;
+    border: 0;
+    border-top: 1px solid var(--ut-line);
+  }
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.muestra {
+  display: inline-block;
+}
+
+.muestra--cuadro {
+  width: 22px;
+  height: 12px;
+  border-radius: 3px;
+  clip-path: polygon(0 0, 75% 0, 100% 50%, 75% 100%, 0 100%);
+}
+
+.muestra--punto {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}

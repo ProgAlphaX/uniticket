@@ -1,0 +1,36 @@
+@if (modo() === 'boton') {
+  <button matButton="tonal" type="button" [matMenuTriggerFor]="menu">
+    <mat-icon fontSet="material-symbols-rounded">sell</mat-icon>
+    {{ etiqueta() }}
+    <span class="contador">{{ seleccion().length }}</span>
+    <mat-icon fontSet="material-symbols-rounded" iconPositionEnd>expand_more</mat-icon>
+  </button>
+} @else {
+  <button
+    matIconButton
+    type="button"
+    class="disparador"
+    [class.disparador--activo]="activo()"
+    [matMenuTriggerFor]="menu"
+    [attr.aria-label]="etiqueta()"
+  >
+    <mat-icon fontSet="material-symbols-rounded">filter_list</mat-icon>
+  </button>
+}
+
+<mat-menu #menu="matMenu" class="ut-menu-filtro">
+  <div class="opciones" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+    <mat-checkbox [checked]="todos()" [indeterminate]="algunos()" (change)="alternarTodos()">
+      <b>Todos</b>
+    </mat-checkbox>
+    <hr />
+    @for (opcion of opciones(); track opcion.valor) {
+      <mat-checkbox [checked]="seleccion().includes(opcion.valor)" (change)="alternar(opcion.valor)">
+        <span class="opcion">
+          <span class="muestra muestra--{{ forma() }}" [style.background]="opcion.color"></span>
+          {{ opcion.etiqueta }}
+        </span>
+      </mat-checkbox>
+    }
+  </div>
+</mat-menu>

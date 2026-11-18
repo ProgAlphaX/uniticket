@@ -1,0 +1,78 @@
+.categorias {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.categoria {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 12px;
+  padding: 14px;
+  border: 1.5px solid var(--ut-line);
+  border-radius: 16px;
+  background: var(--ut-surface);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+
+  &:hover {
+    border-color: #dce1ff;
+  }
+
+  &:has(input:focus-visible) {
+    outline: 3px solid var(--ut-brand);
+    outline-offset: 2px;
+  }
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  b {
+    color: var(--ut-ink);
+    font: 800 15px/1.2 'Nunito', sans-serif;
+  }
+
+  small {
+    color: var(--ut-ink-3);
+    font-size: 12.5px;
+  }
+}
+
+.elegida {
+  border-color: var(--ut-brand);
+  background: #eef0ff;
+  box-shadow: 0 0 0 3px #dce1ff;
+}
+
+.invalido .categoria:not(.elegida) {
+  border-color: #f0b4b4;
+}
+
+.icono {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.icono--CERTIFICADO { background: #e3e7ff; color: #3b4fd8; }
+.icono--CITA_TUTOR { background: #ddf5f1; color: #0e8a7c; }
+.icono--PENSION { background: #ffebd2; color: #c26f00; }
+.icono--DOCUMENTOS { background: #fbe1ee; color: #c0306f; }
+
+@media (max-width: 639.98px) {
+  .categorias {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

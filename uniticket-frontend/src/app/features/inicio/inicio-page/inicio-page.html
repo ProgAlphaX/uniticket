@@ -1,102 +1,133 @@
-<div class="container mt-4">
-  <!-- Cabecera de bienvenida -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2>Panel de Inicio</h2>
-      <p class="text-muted">Resumen general del estado de las solicitudes e indicadores del sistema.</p>
-    </div>
-    <div *ngIf="!authService.esAdmin?.()">
-      <a routerLink="/solicitudes/nueva" class="btn btn-primary">+ Nueva Solicitud</a>
-    </div>
+<header class="saludo">
+  <div>
+    <h2>¡Hola, {{ usuario()?.sNombres?.split(' ')?.[0] }}!</h2>
+    <p>
+      {{ hoy | date: "EEEE d 'de' MMMM" }} ·
+      @if (esAdmin()) {
+        {{ conteo().PENDIENTE }} solicitudes esperan atención
+      } @else {
+        tienes {{ abiertas() }} solicitudes abiertas
+      }
+    </p>
   </div>
+  @if (esAdmin()) {
+    <a matButton="filled" [routerLink]="rutaLista()" [queryParams]="{ estado: 'PENDIENTE' }">
+      <mat-icon fontSet="material-symbols-rounded">inbox</mat-icon>
+      Ver pendientes
+    </a>
+  } @else if (!esMovil()) {
+    <a matButton="filled" routerLink="/solicitudes/nueva">
+      <mat-icon fontSet="material-symbols-rounded">add</mat-icon>
+      Nueva solicitud
+    </a>
+  }
+</header>
 
-  <!-- Indicador de carga -->
-  <div *ngIf="loading()" class="text-center my-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Cargando indicadores...</span>
-    </div>
+@if (cargando()) {
+  <div class="cargando"><mat-spinner diameter="36" /></div>
+} @else if (error()) {
+  <div class="alerta" role="alert">
+    <mat-icon fontSet="material-symbols-rounded">error</mat-icon>
+    <span><b>No se pudieron cargar los indicadores</b>Revisa que el backend esté levantado.</span>
+    <button matButton="text" type="button" (click)="cargar()">Reintentar</button>
   </div>
-
-  <!-- Contenido principal cuando carga -->
-  <div *ngIf="!loading()">
-    <!-- Tarjetas de métricas (5 Estados oficiales) -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-4 col-lg-2">
-        <div class="card text-white bg-secondary shadow-sm h-100">
-          <div class="card-body">
-            <h6 class="card-title">Total</h6>
-            <p class="display-6 fw-bold mb-0">{{ totalTickets() }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 col-lg-2">
-        <div class="card text-white bg-warning shadow-sm h-100">
-          <div class="card-body">
-            <h6 class="card-title">Pendientes</h6>
-            <p class="display-6 fw-bold mb-0">{{ pendientes() }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 col-lg-2">
-        <div class="card text-white bg-primary shadow-sm h-100">
-          <div class="card-body">
-            <h6 class="card-title">En Proceso</h6>
-            <p class="display-6 fw-bold mb-0">{{ enProceso() }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 col-lg-2">
-        <div class="card text-white bg-info shadow-sm h-100">
-          <div class="card-body">
-            <h6 class="card-title">Observadas</h6>
-            <p class="display-6 fw-bold mb-0">{{ observados() }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 col-lg-2">
-        <div class="card text-white bg-success shadow-sm h-100">
-          <div class="card-body">
-            <h6 class="card-title">Procede</h6>
-            <p class="display-6 fw-bold mb-0">{{ procedes() }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 col-lg-2">
-        <div class="card text-white bg-danger shadow-sm h-100">
-          <div class="card-body">
-            <h6 class="card-title">No Procede</h6>
-            <p class="display-6 fw-bold mb-0">{{ noProcedes() }}</p>
-          </div>
-        </div>
-      </div>
+} @else {
+  @if (!esAdmin() && observadas().length) {
+    <div class="alerta alerta--obs" role="status">
+      <mat-icon fontSet="material-symbols-rounded">flag</mat-icon>
+      <span>
+        <b>{{ observadas().length === 1 ? 'Una solicitud espera tu respuesta' : observadas().length + ' solicitudes esperan tu respuesta' }}</b>
+        @for (t of observadas(); track t.nId_Ticket) {
+          <a [routerLink]="['/solicitudes', t.nId_Ticket]">{{ t.sNum_Ticket }} · {{ t.sAsunto }}</a>
+        }
+      </span>
     </div>
+  }
 
-    <!-- Componente Gráfico: ut-bar-chart (Solicitudes por categoría) -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-header bg-white py-3">
-        <h5 class="mb-0">📊 Solicitudes por Categoría (ut-bar-chart)</h5>
-      </div>
-      <div class="card-body">
-        <div *ngIf="categoriaTop()" class="alert alert-light border mb-4 d-flex align-items-center">
-          <div class="me-3 fs-3 text-primary">📌</div>
-          <div>
-            <strong>Categoría más solicitada:</strong> {{ categoriaTop()?.label }} 
-            <span class="badge bg-primary ms-2">{{ categoriaTop()?.count }} solicitudes ({{ categoriaTop()?.percentage }}%)</span>
-          </div>
-        </div>
+  <section class="contadores" [class.contadores--admin]="esAdmin()" aria-label="Contadores por estado">
+    @for (estado of estados; track estado) {
+      <a [routerLink]="rutaLista()" [queryParams]="{ estado }">
+        <ut-stat-card [etiqueta]="etiquetas[estado]" [valor]="conteo()[estado]" [icono]="iconos[estado]" [tono]="estado" />
+      </a>
+    }
+    @if (esAdmin()) {
+      <a routerLink="/admin/usuarios">
+        <ut-stat-card etiqueta="Usuarios activos" [valor]="usuariosActivos()" icono="group" tono="USUARIOS" />
+      </a>
+    }
+  </section>
 
-        <div class="d-flex flex-column gap-3">
-          <div *ngFor="let cat of categoriasStats()">
-            <div class="d-flex justify-content-between mb-1">
-              <span class="fw-semibold">{{ cat.label }}</span>
-              <span class="text-muted">{{ cat.count }} ({{ cat.percentage }}%)</span>
-            </div>
-            <div class="progress" style="height: 12px;">
-              <div class="progress-bar bg-primary" role="progressbar" [style.width.%]="cat.percentage" [attr.aria-valuenow]="cat.percentage" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+  @if (esAdmin()) {
+    <div class="paneles">
+      <section class="ut-card panel panel--ancho">
+        <header>
+          <h3><mat-icon fontSet="material-symbols-rounded">bar_chart</mat-icon>Solicitudes por categoría</h3>
+          <small>{{ visibles().length }} en total</small>
+        </header>
+        <ut-bar-chart [datos]="grafico()" (seleccionar)="verCategoria($event)" />
+      </section>
+
+      <section class="ut-card panel">
+        <header>
+          <h3>Por atender</h3>
+          <a matButton="text" [routerLink]="rutaLista()" [queryParams]="{ estado: 'PENDIENTE' }">Ver todas</a>
+        </header>
+        <ng-container *ngTemplateOutlet="lista; context: { $implicit: porAtender(), vacio: 'No hay solicitudes pendientes.' }" />
+      </section>
+
+      <section class="ut-card panel">
+        <header>
+          <h3>En proceso</h3>
+          <small>{{ conteo().EN_PROCESO + conteo().OBSERVADO }} abiertas</small>
+        </header>
+        <ng-container *ngTemplateOutlet="lista; context: { $implicit: enCurso(), vacio: 'Atiende una solicitud pendiente para empezar.' }" />
+      </section>
     </div>
-  </div>
-</div>
+  } @else {
+    <section class="ut-card panel">
+      <header>
+        <h3>Mis últimas solicitudes</h3>
+        <a matButton="text" routerLink="/solicitudes">Ver todas</a>
+      </header>
+      @if (ultimas().length) {
+        <ul class="mini">
+          @for (t of ultimas(); track t.nId_Ticket) {
+            <li>
+              <a [routerLink]="['/solicitudes', t.nId_Ticket]">
+                <span class="mini-icono"><mat-icon fontSet="material-symbols-rounded">{{ tipoIcono[t.sTipo] }}</mat-icon></span>
+                <b>{{ t.sAsunto }}</b>
+                <ut-status-pill [estado]="t.sEstado" />
+                <small>{{ t.sNum_Ticket }} · {{ tipos[t.sTipo] }} · {{ t.dFecha_Creacion | date: 'd MMM' }}</small>
+              </a>
+            </li>
+          }
+        </ul>
+      } @else {
+        <ut-empty-state titulo="Aún no tienes solicitudes" mensaje="Elige una categoría en «Nueva solicitud» y envía la primera." />
+      }
+    </section>
+  }
+}
+
+<ng-template #lista let-tickets let-vacio="vacio">
+  @if (tickets.length) {
+    <ul class="mini">
+      @for (t of tickets; track t.nId_Ticket) {
+        <li>
+          <a [routerLink]="['/admin/solicitudes', t.nId_Ticket]">
+            @if (usuarioDe(t.nId_Usuario); as u) {
+              <ut-avatar [id]="u.nId_Usuario" [nombres]="u.sNombres" [apellidos]="u.sApellidos" />
+              <b>{{ u.sNombreCompleto }}</b>
+            } @else {
+              <b>Usuario {{ t.nId_Usuario }}</b>
+            }
+            <ut-status-pill [estado]="t.sEstado" />
+            <small>{{ t.sNum_Ticket }} · {{ t.sAsunto }} · {{ t.dFecha_Creacion | date: 'd MMM' }}</small>
+          </a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <ut-empty-state titulo="Todo al día" [mensaje]="vacio" />
+  }
+</ng-template>

@@ -1,0 +1,96 @@
+:host {
+  display: grid;
+  gap: 16px;
+}
+
+.destacado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8f9fd;
+
+  small {
+    display: block;
+    color: var(--ut-ink-3);
+    font-size: 12.5px;
+  }
+
+  b {
+    display: block;
+    font: 800 18px/1.2 'Nunito', sans-serif;
+  }
+}
+
+.destacado-icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #eef0ff;
+  color: var(--ut-brand);
+}
+
+.barras {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barra {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ut-ink-2);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover .relleno,
+  &:focus-visible .relleno {
+    background: #2d3eb5;
+  }
+}
+
+.nombre {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pista {
+  height: 14px;
+}
+
+.relleno {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--ut-brand);
+  transition: background-color 0.12s;
+}
+
+.valor {
+  color: var(--ut-ink);
+  font: 800 14px/1 'Nunito', sans-serif;
+  text-align: right;
+}
+
+@media (max-width: 420px) {
+  .barra {
+    grid-template-columns: minmax(0, 108px) minmax(0, 1fr) 26px;
+  }
+}

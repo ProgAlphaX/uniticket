@@ -1,55 +1,80 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
+
+import { TipoTicket } from '../../../core/config/catalogos';
+import { ApiError } from '../../../core/models/api-error';
+import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { CategoryPicker } from '../category-picker/category-picker';
 import { TicketService } from '../data/ticket.service';
 
 @Component({
   selector: 'ut-nueva-solicitud-page',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    CategoryPicker,
+  ],
   templateUrl: './nueva-solicitud-page.html',
   styleUrl: './nueva-solicitud-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NuevaSolicitudPage {
-  private fb = inject(FormBuilder);
-  private ticketService = inject(TicketService);
-  private router = inject(Router);
+  private readonly fb = inject(NonNullableFormBuilder);
+  private readonly ticketService = inject(TicketService);
+  private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
 
-  // Categorías oficiales de UniTicket (ut-category-picker)
-  categorias = [
-    { id: 'CERTIFICADO', nombre: 'Certificado de estudios', descripcion: 'Constancias y certificados de notas' },
-    { id: 'CITA_TUTOR', nombre: 'Cita con tutor', descripcion: 'Asesoría académica o de tesis' },
-    { id: 'PENSION', nombre: 'Pensión y pagos', descripcion: 'Cuotas, boletas, fraccionamiento' },
-    { id: 'DOCUMENTOS', nombre: 'Trámite de documentos', descripcion: 'Carné, convalidaciones, datos' }
-  ];
-
-  // Formulario reactivo con validaciones (FRM-02)
-  form: FormGroup = this.fb.group({
-    sTipo: ['', Validators.required],
+  protected readonly form = this.fb.group({
+    sTipo: this.fb.control<TipoTicket | ''>('', Validators.required),
     sAsunto: ['', [Validators.required, Validators.maxLength(150)]],
-    sDescripcion: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(1000)]]
+    sDescripcion: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(1000)]],
   });
 
-  onSubmit() {
-    if (this.form.invalid) {
+  protected readonly enviando = signal(false);
+  protected readonly errorApi = signal<string | null>(null);
+
+  protected enviar(): void {
+    const usuario = this.auth.usuario();
+    if (this.form.invalid || !usuario) {
       this.form.markAllAsTouched();
       return;
     }
+    const { sTipo, sAsunto, sDescripcion } = this.form.getRawValue();
+    this.enviando.set(true);
+    this.errorApi.set(null);
 
-    const payload = {
-      nId_Usuario: 2, // ID de Ana Torres (estudiante de prueba)
-      ...this.form.value
-    };
-
-    this.ticketService.crear(payload).subscribe({
-      next: () => {
-        this.router.navigate(['/solicitudes']);
-      },
-      error: (err) => {
-        console.error('Error al registrar la solicitud:', err);
-      }
-    });
+    this.ticketService
+      .crear({
+        nId_Usuario: usuario.nId_Usuario,
+        sTipo: sTipo as TipoTicket,
+        sAsunto: sAsunto.trim(),
+        sDescripcion: sDescripcion.trim(),
+      })
+      .subscribe({
+        next: ticket => {
+          console.log('Datos recibidos del servicio:', ticket);
+          this.toast.ok(`Solicitud ${ticket.sNum_Ticket} enviada. Te avisaremos cuando cambie su estado.`);
+          this.router.navigate(['/solicitudes', ticket.nId_Ticket]);
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('Error al llamar al servicio:', err);
+          this.errorApi.set((err.error as ApiError)?.message ?? 'No se pudo enviar la solicitud');
+          this.enviando.set(false);
+        },
+      });
   }
 }

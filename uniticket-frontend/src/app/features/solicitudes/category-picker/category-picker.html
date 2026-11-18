@@ -1,0 +1,20 @@
+<div class="categorias" role="radiogroup" aria-label="Categoría de la solicitud" [class.invalido]="invalido()">
+  @for (c of categorias; track c.tipo) {
+    <label class="categoria" [class.elegida]="valor() === c.tipo">
+      <input
+        type="radio"
+        name="categoria"
+        [value]="c.tipo"
+        [checked]="valor() === c.tipo"
+        [disabled]="deshabilitado()"
+        (change)="elegir(c.tipo)"
+        (blur)="tocar()"
+      />
+      <span class="icono icono--{{ c.tipo }}">
+        <mat-icon fontSet="material-symbols-rounded">{{ c.icono }}</mat-icon>
+      </span>
+      <b>{{ c.nombre }}</b>
+      <small>{{ c.descripcion }}</small>
+    </label>
+  }
+</div>

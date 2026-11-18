@@ -1,122 +1,76 @@
-<div class="container mt-4 mb-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2>Listado de Solicitudes</h2>
-      <p class="text-muted">Consulta, filtra y haz seguimiento de tus trámites (FRM-03).</p>
-    </div>
-    <a routerLink="/solicitudes/nueva" class="btn btn-primary">+ Nueva Solicitud</a>
+<header class="saludo">
+  <div>
+    <h2>{{ esAdmin() ? 'Solicitudes' : 'Mis solicitudes' }}</h2>
+    <p>{{ esAdmin() ? 'Todas las solicitudes de los estudiantes.' : 'Sigue el estado de tus trámites.' }}</p>
+  </div>
+  @if (!esAdmin() && !esMovil()) {
+    <a matButton="filled" routerLink="/solicitudes/nueva">
+      <mat-icon fontSet="material-symbols-rounded">add</mat-icon>
+      Nueva solicitud
+    </a>
+  }
+</header>
+
+<section class="ut-card">
+  <div class="herramientas" role="search">
+    <mat-form-field appearance="outline" class="busqueda" subscriptSizing="dynamic">
+      <mat-icon matPrefix fontSet="material-symbols-rounded">search</mat-icon>
+      <mat-label>{{ esAdmin() ? 'Buscar por estudiante, DNI, N.º o asunto' : 'Buscar por N.º o asunto' }}</mat-label>
+      <input matInput type="search" [value]="texto()" (input)="buscar($any($event.target).value)" />
+    </mat-form-field>
+
+    <ut-column-filter
+      modo="boton"
+      etiqueta="Categorías"
+      forma="punto"
+      [opciones]="opcionesTipo"
+      [seleccion]="tipos()"
+      (seleccionChange)="cambiarTipos($event)"
+    />
+
+    <button matIconButton type="button" class="recargar" aria-label="Actualizar lista" (click)="cargar()">
+      <mat-icon fontSet="material-symbols-rounded">refresh</mat-icon>
+    </button>
   </div>
 
-  <!-- Barra de Filtros (FRM-03) -->
-  <div class="card shadow-sm mb-4 p-3 bg-light">
-    <div class="row g-3">
-      <!-- Búsqueda por texto / N° de ticket -->
-      <div class="col-md-4">
-        <label class="form-label small fw-bold">Buscar</label>
-        <input type="text" class="form-control" [ngModel]="filtroTexto()" (ngModelChange)="filtroTexto.set($event); paginaActual.set(1)" placeholder="N° ticket o asunto...">
-      </div>
-
-      <!-- Filtro por Estado -->
-      <div class="col-md-3">
-        <label class="form-label small fw-bold">Estado</label>
-        <select class="form-select" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event); paginaActual.set(1)">
-          <option value="">Todos los estados</option>
-          <option value="PENDIENTE">Pendiente</option>
-          <option value="EN_PROCESO">En Proceso</option>
-          <option value="OBSERVADO">Observado</option>
-          <option value="PROCEDE">Procede</option>
-          <option value="NO_PROCEDE">No Procede</option>
-        </select>
-      </div>
-
-      <!-- Filtro por Categoría / Tipo -->
-      <div class="col-md-3">
-        <label class="form-label small fw-bold">Categoría</label>
-        <select class="form-select" [ngModel]="filtroTipo()" (ngModelChange)="filtroTipo.set($event); paginaActual.set(1)">
-          <option value="">Todas las categorías</option>
-          <option value="CERTIFICADO">Certificado de estudios</option>
-          <option value="CITA_TUTOR">Cita con tutor</option>
-          <option value="PENSION">Pensión y pagos</option>
-          <option value="DOCUMENTOS">Trámite de documentos</option>
-        </select>
-      </div>
-
-      <!-- Botón limpiar -->
-      <div class="col-md-2 d-flex align-items-end">
-        <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltros()">Limpiar</button>
-      </div>
+  @if (cargando()) {
+    <div class="cargando"><mat-spinner diameter="36" /></div>
+  } @else if (error()) {
+    <div class="alerta" role="alert">
+      <mat-icon fontSet="material-symbols-rounded">error</mat-icon>
+      <span><b>No se pudieron cargar las solicitudes</b>Revisa que el backend esté levantado.</span>
+      <button matButton="text" type="button" (click)="cargar()">Reintentar</button>
     </div>
-  </div>
+  } @else {
+    <ut-solicitudes-table
+      [tickets]="paginaActual()"
+      [usuarios]="usuarios()"
+      [esAdmin]="esAdmin()"
+      [estados]="estados()"
+      (estadosChange)="cambiarEstados($event)"
+    />
 
-  <!-- Indicador de carga -->
-  <div *ngIf="loading()" class="text-center my-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Cargando solicitudes...</span>
-    </div>
-  </div>
+    @if (!filtrados().length) {
+      <ut-empty-state titulo="No hay resultados" mensaje="Prueba con otra búsqueda o activa más estados y categorías.">
+        <button matButton="tonal" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+      </ut-empty-state>
+    }
 
-  <!-- Tabla de solicitudes -->
-  <div *ngIf="!loading()" class="card shadow-sm">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th class="py-3 ps-3">N.º Ticket</th>
-              <th class="py-3">Categoría</th>
-              <th class="py-3">Asunto</th>
-              <th class="py-3">Estado</th>
-              <th class="py-3 text-end pe-3">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let ticket of ticketsPaginados()">
-              <td class="ps-3 fw-semibold text-primary">{{ ticket.sNum_Ticket || ('SOL-' + ticket.id) }}</td>
-              <td>{{ ticket.sTipo }}</td>
-              <td>{{ ticket.sAsunto }}</td>
-              <td>
-                <span class="badge" 
-                      [class.bg-warning]="ticket.sEstado === 'PENDIENTE'"
-                      [class.bg-primary]="ticket.sEstado === 'EN_PROCESO'"
-                      [class.bg-info]="ticket.sEstado === 'OBSERVADO'"
-                      [class.bg-success]="ticket.sEstado === 'PROCEDE'"
-                      [class.bg-danger]="ticket.sEstado === 'NO_PROCEDE'">
-                  {{ ticket.sEstado || 'PENDIENTE' }}
-                </span>
-              </td>
-              <td class="text-end pe-3">
-                <a [routerLink]="['/solicitudes', ticket.nId_Ticket || ticket.id]" class="btn btn-sm btn-outline-primary">Ver Detalle</a>
-              </td>
-            </tr>
-            <!-- Mensaje si la lista filtrada está vacía -->
-            <tr *ngIf="ticketsPaginados().length === 0">
-              <td colspan="5" class="text-center text-muted py-5">
-                No se encontraron solicitudes con los filtros aplicados.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <footer class="pie">
+      <div class="resumen">
+        @for (r of resumen(); track r.estado) {
+          <span><i [style.background]="r.color"></i>{{ r.etiqueta }} {{ r.total }}</span>
+        }
       </div>
-    </div>
-
-    <!-- Paginador Footer -->
-    <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
-      <span class="text-muted small">
-        Mostrando página <strong>{{ paginaActual() }}</strong> de <strong>{{ totalPaginas() }}</strong> (Total: {{ ticketsFiltrados().length }} registros)
-      </span>
-
-      <div class="btn-group">
-        <button class="btn btn-outline-secondary btn-sm" 
-                [disabled]="paginaActual() === 1" 
-                (click)="cambiarPagina(paginaActual() - 1)">
-          Anterior
-        </button>
-        <button class="btn btn-outline-secondary btn-sm" 
-                [disabled]="paginaActual() === totalPaginas()" 
-                (click)="cambiarPagina(paginaActual() + 1)">
-          Siguiente
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+      <mat-paginator
+        [length]="filtrados().length"
+        [pageIndex]="pagina()"
+        [pageSize]="tamano()"
+        [pageSizeOptions]="[5, 10, 20]"
+        [showFirstLastButtons]="true"
+        aria-label="Paginación de solicitudes"
+        (page)="cambiarPagina($event)"
+      />
+    </footer>
+  }
+</section>

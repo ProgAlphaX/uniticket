@@ -1,0 +1,28 @@
+@if (principal(); as top) {
+  <div class="destacado">
+    <span class="destacado-icono"><mat-icon fontSet="material-symbols-rounded">{{ top.icono }}</mat-icon></span>
+    <div>
+      <small>Categoría más solicitada</small>
+      <b>{{ top.etiqueta }}</b>
+      <small>{{ top.valor }} de {{ total() }} solicitudes · {{ porcentaje(top.valor) }} %</small>
+    </div>
+  </div>
+}
+
+<ul class="barras" aria-label="Solicitudes por categoría">
+  @for (dato of ordenados(); track dato.clave) {
+    <li>
+      <button
+        type="button"
+        class="barra"
+        [attr.aria-label]="dato.etiqueta + ': ' + dato.valor + ' solicitudes, ' + porcentaje(dato.valor) + ' por ciento. Ver en la lista'"
+        [title]="dato.etiqueta + ' · ' + dato.valor + ' (' + porcentaje(dato.valor) + ' %)'"
+        (click)="seleccionar.emit(dato.clave)"
+      >
+        <span class="nombre">{{ dato.etiqueta }}</span>
+        <span class="pista"><span class="relleno" [style.width.%]="(dato.valor / maximo()) * 100"></span></span>
+        <span class="valor">{{ dato.valor }}</span>
+      </button>
+    </li>
+  }
+</ul>
