@@ -59,7 +59,6 @@ export class NuevaSolicitudPage {
 
     this.ticketService
       .crear({
-        nId_Usuario: usuario.nId_Usuario,
         sTipo: sTipo as TipoTicket,
         sAsunto: sAsunto.trim(),
         sDescripcion: sDescripcion.trim(),

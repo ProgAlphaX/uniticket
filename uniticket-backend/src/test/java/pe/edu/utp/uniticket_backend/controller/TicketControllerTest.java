@@ -12,22 +12,37 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@WithMockUser
+@WithMockUser(username = "seed.admin@utp.edu.pe", authorities = "ADMIN")
 class TicketControllerTest {
     @Autowired
     MockMvc mockMvc;
 
     private static final String ID_INEXISTENTE = "999999999";
+
+    /* Identidad con la que se hacen las peticiones: coincide con los usuarios que crea crearUsuarioDePrueba */
+    private RequestPostProcessor estudiante() {
+        return SecurityMockMvcRequestPostProcessors.user("prueba.estandar@utp.edu.pe")
+                .authorities(new SimpleGrantedAuthority("ESTANDAR"));
+    }
+
+    private RequestPostProcessor admin() {
+        return SecurityMockMvcRequestPostProcessors.user("prueba.admin@utp.edu.pe")
+                .authorities(new SimpleGrantedAuthority("ADMIN"));
+    }
 
     /* Extrae el valor numérico de un campo id del JSON de respuesta */
     private String extraerId(String body, String campo) {
@@ -59,24 +74,23 @@ class TicketControllerTest {
         return extraerId(result.getResponse().getContentAsString(), "nId_Usuario");
     }
 
-    private String ticketValidoJson(String idUsuario) {
+    private String ticketValidoJson() {
         return """
                 {
-                  "nId_Usuario": %s,
                   "sTipo": "CERTIFICADO",
                   "sAsunto": "Constancia de prueba",
                   "sDescripcion": "Necesito la constancia para un tramite bancario"
                 }
-                """.formatted(idUsuario);
+                """;
     }
 
     /* Registra en la BD un ticket de prueba (con su usuario) y devuelve el id del ticket */
     private String crearTicketDePrueba() throws Exception {
-        String idUsuario = crearUsuarioDePrueba("ESTANDAR");
+        crearUsuarioDePrueba("ESTANDAR");
         URI uri = new URI("/api/tickets");
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.post(uri)
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.post(uri).with(estudiante())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(ticketValidoJson(idUsuario))
+                .content(ticketValidoJson())
                 .accept(MediaType.APPLICATION_JSON);
         MvcResult result = mockMvc.perform(req).andReturn();
         assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
@@ -87,11 +101,11 @@ class TicketControllerTest {
     @Test
     void testCrearTicketConDatosValidos() throws Exception {
         System.out.println("Ejecutando testCrearTicketConDatosValidos");
-        String idUsuario = crearUsuarioDePrueba("ESTANDAR");
+        crearUsuarioDePrueba("ESTANDAR");
         URI uri = new URI("/api/tickets");
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.post(uri)
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.post(uri).with(estudiante())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(ticketValidoJson(idUsuario))
+                .content(ticketValidoJson())
                 .accept(MediaType.APPLICATION_JSON);
         MvcResult result = mockMvc.perform(req).andReturn();
         assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
@@ -103,17 +117,16 @@ class TicketControllerTest {
     @Test
     void testCrearTicketConDescripcionVacia() throws Exception {
         System.out.println("Ejecutando testCrearTicketConDescripcionVacia");
-        String idUsuario = crearUsuarioDePrueba("ESTANDAR");
+        crearUsuarioDePrueba("ESTANDAR");
         String json = """
                 {
-                  "nId_Usuario": %s,
                   "sTipo": "CERTIFICADO",
                   "sAsunto": "Constancia de prueba",
                   "sDescripcion": ""
                 }
-                """.formatted(idUsuario);
+                """;
         URI uri = new URI("/api/tickets");
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.post(uri)
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.post(uri).with(estudiante())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json)
                 .accept(MediaType.APPLICATION_JSON);
@@ -121,24 +134,24 @@ class TicketControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
     }
 
-    /* 3° Test: Crear ticket sin ID de usuario */
+    /* 3° Test: El dueño del ticket sale del token, no del cuerpo de la petición */
     @Test
-    void testCrearTicketSinIdUsuario() throws Exception {
-        System.out.println("Ejecutando testCrearTicketSinIdUsuario");
+    void testCrearTicketIgnoraElIdDeUsuarioEnviado() throws Exception {
+        System.out.println("Ejecutando testCrearTicketIgnoraElIdDeUsuarioEnviado");
+        String idEstudiante = crearUsuarioDePrueba("ESTANDAR");
+        String idAdmin = crearUsuarioDePrueba("ADMIN");
         String json = """
                 {
+                  "nId_Usuario": %s,
                   "sTipo": "CERTIFICADO",
                   "sAsunto": "Constancia de prueba",
                   "sDescripcion": "Descripcion valida"
                 }
-                """;
-        URI uri = new URI("/api/tickets");
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.post(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json)
-                .accept(MediaType.APPLICATION_JSON);
-        MvcResult result = mockMvc.perform(req).andReturn();
-        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+                """.formatted(idAdmin);
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(new URI("/api/tickets")).with(estudiante())
+                .contentType(MediaType.APPLICATION_JSON).content(json).accept(MediaType.APPLICATION_JSON)).andReturn();
+        assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
+        assertEquals(idEstudiante, extraerId(result.getResponse().getContentAsString(), "nId_Usuario"));
     }
 
     /* 4° Test: Listar tickets */
@@ -147,7 +160,7 @@ class TicketControllerTest {
         System.out.println("Ejecutando testListarTickets");
         String idTicket = crearTicketDePrueba();
         URI uri = new URI("/api/tickets");
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON);
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).with(estudiante()).accept(MediaType.APPLICATION_JSON);
         MvcResult result = mockMvc.perform(req).andReturn();
         assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
         assertTrue(result.getResponse().getContentAsString().contains("\"nId_Ticket\":" + idTicket + ","));
@@ -159,7 +172,7 @@ class TicketControllerTest {
         System.out.println("Ejecutando testListarTicketsFiltradoPorEstado");
         String idTicket = crearTicketDePrueba();
         URI uri = new URI("/api/tickets?estado=PENDIENTE");
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON);
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).with(estudiante()).accept(MediaType.APPLICATION_JSON);
         MvcResult result = mockMvc.perform(req).andReturn();
         assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
         assertTrue(result.getResponse().getContentAsString().contains("\"nId_Ticket\":" + idTicket + ","));
@@ -170,8 +183,9 @@ class TicketControllerTest {
     @Test
     void testListarTicketsConEstadoInvalido() throws Exception {
         System.out.println("Ejecutando testListarTicketsConEstadoInvalido");
+        crearUsuarioDePrueba("ESTANDAR");
         URI uri = new URI("/api/tickets?estado=NOEXISTE");
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON);
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).with(estudiante()).accept(MediaType.APPLICATION_JSON);
         MvcResult result = mockMvc.perform(req).andReturn();
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
     }
@@ -182,7 +196,7 @@ class TicketControllerTest {
         System.out.println("Ejecutando testObtenerTicketPorIdExistente");
         String idTicket = crearTicketDePrueba();
         URI uri = new URI("/api/tickets/" + idTicket);
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON);
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).with(estudiante()).accept(MediaType.APPLICATION_JSON);
         MvcResult result = mockMvc.perform(req).andReturn();
         assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
         assertTrue(result.getResponse().getContentAsString().contains("\"nId_Ticket\":" + idTicket + ","));
@@ -193,15 +207,16 @@ class TicketControllerTest {
     @Test
     void testObtenerTicketPorIdInexistente() throws Exception {
         System.out.println("Ejecutando testObtenerTicketPorIdInexistente");
+        crearUsuarioDePrueba("ESTANDAR");
         URI uri = new URI("/api/tickets/" + ID_INEXISTENTE);
-        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON);
+        MockHttpServletRequestBuilder req = MockMvcRequestBuilders.get(uri).with(estudiante()).accept(MediaType.APPLICATION_JSON);
         MvcResult result = mockMvc.perform(req).andReturn();
         assertEquals(HttpStatus.NOT_FOUND.value(), result.getResponse().getStatus());
     }
 
-    /* Registra un ticket para el usuario indicado y devuelve su id */
-    private String crearTicketPara(String idUsuario) throws Exception {
-        MvcResult result = enviar(MockMvcRequestBuilders.post(new URI("/api/tickets")), ticketValidoJson(idUsuario));
+    /* Registra un ticket del estudiante de prueba y devuelve su id */
+    private String crearTicketDelEstudiante() throws Exception {
+        MvcResult result = enviar(MockMvcRequestBuilders.post(new URI("/api/tickets")).with(estudiante()), ticketValidoJson());
         assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
         return extraerId(result.getResponse().getContentAsString(), "nId_Ticket");
     }
@@ -211,25 +226,31 @@ class TicketControllerTest {
                 .accept(MediaType.APPLICATION_JSON)).andReturn();
     }
 
-    private MvcResult cambiarEstado(String idTicket, String idAdmin, String estado, String comentario) throws Exception {
+    private MvcResult cambiarEstadoComo(RequestPostProcessor quien, String idTicket, String estado, String comentario) throws Exception {
         String json = """
                 {
-                  "nId_Admin": %s,
                   "sEstado": "%s",
                   "sComentario": %s
                 }
-                """.formatted(idAdmin, estado, comentario == null ? "null" : "\"" + comentario + "\"");
-        return enviar(MockMvcRequestBuilders.put(new URI("/api/tickets/" + idTicket + "/estado")), json);
+                """.formatted(estado, comentario == null ? "null" : "\"" + comentario + "\"");
+        return enviar(MockMvcRequestBuilders.put(new URI("/api/tickets/" + idTicket + "/estado")).with(quien), json);
     }
 
-    private MvcResult responder(String idTicket, String idUsuario, String comentario) throws Exception {
+    private MvcResult cambiarEstado(String idTicket, String estado, String comentario) throws Exception {
+        return cambiarEstadoComo(admin(), idTicket, estado, comentario);
+    }
+
+    private MvcResult responderComo(RequestPostProcessor quien, String idTicket, String comentario) throws Exception {
         String json = """
                 {
-                  "nId_Usuario": %s,
                   "sComentario": "%s"
                 }
-                """.formatted(idUsuario, comentario);
-        return enviar(MockMvcRequestBuilders.post(new URI("/api/tickets/" + idTicket + "/comentarios")), json);
+                """.formatted(comentario);
+        return enviar(MockMvcRequestBuilders.post(new URI("/api/tickets/" + idTicket + "/comentarios")).with(quien), json);
+    }
+
+    private MvcResult responder(String idTicket, String comentario) throws Exception {
+        return responderComo(estudiante(), idTicket, comentario);
     }
 
     private String estadoDe(MvcResult result) throws Exception {
@@ -243,7 +264,7 @@ class TicketControllerTest {
     void testObtenerTicketIncluyeSeguimientoDeRegistro() throws Exception {
         System.out.println("Ejecutando testObtenerTicketIncluyeSeguimientoDeRegistro");
         String idTicket = crearTicketDePrueba();
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get(new URI("/api/tickets/" + idTicket))
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get(new URI("/api/tickets/" + idTicket)).with(estudiante())
                 .accept(MediaType.APPLICATION_JSON)).andReturn();
         assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
         assertTrue(result.getResponse().getContentAsString().contains("\"sAccion\":\"REGISTRO\""));
@@ -256,7 +277,7 @@ class TicketControllerTest {
         System.out.println("Ejecutando testAtenderTicketPendiente");
         String idTicket = crearTicketDePrueba();
         String idAdmin = crearUsuarioDePrueba("ADMIN");
-        MvcResult result = cambiarEstado(idTicket, idAdmin, "EN_PROCESO", null);
+        MvcResult result = cambiarEstado(idTicket, "EN_PROCESO", null);
         assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
         assertEquals("EN_PROCESO", estadoDe(result));
     }
@@ -265,10 +286,10 @@ class TicketControllerTest {
     @Test
     void testCambiarEstadoConUsuarioSinRolAdmin() throws Exception {
         System.out.println("Ejecutando testCambiarEstadoConUsuarioSinRolAdmin");
-        String idEstudiante = crearUsuarioDePrueba("ESTANDAR");
-        String idTicket = crearTicketPara(idEstudiante);
-        MvcResult result = cambiarEstado(idTicket, idEstudiante, "EN_PROCESO", null);
-        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+        crearUsuarioDePrueba("ESTANDAR");
+        String idTicket = crearTicketDelEstudiante();
+        MvcResult result = cambiarEstadoComo(estudiante(), idTicket, "EN_PROCESO", null);
+        assertEquals(HttpStatus.FORBIDDEN.value(), result.getResponse().getStatus());
     }
 
     /* 12° Test: Cambiar estado de un ticket inexistente */
@@ -276,7 +297,7 @@ class TicketControllerTest {
     void testCambiarEstadoDeTicketInexistente() throws Exception {
         System.out.println("Ejecutando testCambiarEstadoDeTicketInexistente");
         String idAdmin = crearUsuarioDePrueba("ADMIN");
-        MvcResult result = cambiarEstado(ID_INEXISTENTE, idAdmin, "EN_PROCESO", null);
+        MvcResult result = cambiarEstado(ID_INEXISTENTE, "EN_PROCESO", null);
         assertEquals(HttpStatus.NOT_FOUND.value(), result.getResponse().getStatus());
     }
 
@@ -286,7 +307,7 @@ class TicketControllerTest {
         System.out.println("Ejecutando testTransicionNoPermitida");
         String idTicket = crearTicketDePrueba();
         String idAdmin = crearUsuarioDePrueba("ADMIN");
-        MvcResult result = cambiarEstado(idTicket, idAdmin, "PROCEDE", "Aprobado sin revisar");
+        MvcResult result = cambiarEstado(idTicket, "PROCEDE", "Aprobado sin revisar");
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
         assertTrue(result.getResponse().getContentAsString().contains("No se puede pasar de PENDIENTE a PROCEDE"));
     }
@@ -297,8 +318,8 @@ class TicketControllerTest {
         System.out.println("Ejecutando testObservarSinComentario");
         String idTicket = crearTicketDePrueba();
         String idAdmin = crearUsuarioDePrueba("ADMIN");
-        cambiarEstado(idTicket, idAdmin, "EN_PROCESO", null);
-        MvcResult result = cambiarEstado(idTicket, idAdmin, "OBSERVADO", null);
+        cambiarEstado(idTicket, "EN_PROCESO", null);
+        MvcResult result = cambiarEstado(idTicket, "OBSERVADO", null);
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
         assertTrue(result.getResponse().getContentAsString().contains("comentario es obligatorio"));
     }
@@ -309,12 +330,12 @@ class TicketControllerTest {
         System.out.println("Ejecutando testFlujoObservarResponderYProcede");
         String idEstudiante = crearUsuarioDePrueba("ESTANDAR");
         String idAdmin = crearUsuarioDePrueba("ADMIN");
-        String idTicket = crearTicketPara(idEstudiante);
+        String idTicket = crearTicketDelEstudiante();
 
-        assertEquals("EN_PROCESO", estadoDe(cambiarEstado(idTicket, idAdmin, "EN_PROCESO", null)));
-        assertEquals("OBSERVADO", estadoDe(cambiarEstado(idTicket, idAdmin, "OBSERVADO", "Adjunta el voucher")));
-        assertEquals("EN_PROCESO", estadoDe(responder(idTicket, idEstudiante, "Ya envie el voucher")));
-        MvcResult result = cambiarEstado(idTicket, idAdmin, "PROCEDE", "Tu constancia esta lista");
+        assertEquals("EN_PROCESO", estadoDe(cambiarEstado(idTicket, "EN_PROCESO", null)));
+        assertEquals("OBSERVADO", estadoDe(cambiarEstado(idTicket, "OBSERVADO", "Adjunta el voucher")));
+        assertEquals("EN_PROCESO", estadoDe(responder(idTicket, "Ya envie el voucher")));
+        MvcResult result = cambiarEstado(idTicket, "PROCEDE", "Tu constancia esta lista");
         assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
         assertEquals("PROCEDE", estadoDe(result));
         String body = result.getResponse().getContentAsString();
@@ -328,16 +349,16 @@ class TicketControllerTest {
         System.out.println("Ejecutando testMaximoDosObservaciones");
         String idEstudiante = crearUsuarioDePrueba("ESTANDAR");
         String idAdmin = crearUsuarioDePrueba("ADMIN");
-        String idTicket = crearTicketPara(idEstudiante);
-        cambiarEstado(idTicket, idAdmin, "EN_PROCESO", null);
+        String idTicket = crearTicketDelEstudiante();
+        cambiarEstado(idTicket, "EN_PROCESO", null);
         for (int i = 1; i <= 2; i++) {
-            assertEquals("OBSERVADO", estadoDe(cambiarEstado(idTicket, idAdmin, "OBSERVADO", "Observacion " + i)));
-            assertEquals("EN_PROCESO", estadoDe(responder(idTicket, idEstudiante, "Respuesta " + i)));
+            assertEquals("OBSERVADO", estadoDe(cambiarEstado(idTicket, "OBSERVADO", "Observacion " + i)));
+            assertEquals("EN_PROCESO", estadoDe(responder(idTicket, "Respuesta " + i)));
         }
-        MvcResult result = cambiarEstado(idTicket, idAdmin, "OBSERVADO", "Tercera observacion");
+        MvcResult result = cambiarEstado(idTicket, "OBSERVADO", "Tercera observacion");
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
         assertTrue(result.getResponse().getContentAsString().contains("observada 2 veces"));
-        assertEquals("NO_PROCEDE", estadoDe(cambiarEstado(idTicket, idAdmin, "NO_PROCEDE", "No cumple los requisitos")));
+        assertEquals("NO_PROCEDE", estadoDe(cambiarEstado(idTicket, "NO_PROCEDE", "No cumple los requisitos")));
     }
 
     /* 17° Test: No se puede responder una solicitud que no está observada */
@@ -345,8 +366,8 @@ class TicketControllerTest {
     void testResponderSolicitudNoObservada() throws Exception {
         System.out.println("Ejecutando testResponderSolicitudNoObservada");
         String idEstudiante = crearUsuarioDePrueba("ESTANDAR");
-        String idTicket = crearTicketPara(idEstudiante);
-        MvcResult result = responder(idTicket, idEstudiante, "Respuesta sin observacion");
+        String idTicket = crearTicketDelEstudiante();
+        MvcResult result = responder(idTicket, "Respuesta sin observacion");
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
     }
 
@@ -356,10 +377,10 @@ class TicketControllerTest {
         System.out.println("Ejecutando testResponderSolicitudDeOtroUsuario");
         String idEstudiante = crearUsuarioDePrueba("ESTANDAR");
         String idAdmin = crearUsuarioDePrueba("ADMIN");
-        String idTicket = crearTicketPara(idEstudiante);
-        cambiarEstado(idTicket, idAdmin, "EN_PROCESO", null);
-        cambiarEstado(idTicket, idAdmin, "OBSERVADO", "Falta un documento");
-        MvcResult result = responder(idTicket, idAdmin, "Respondo por el estudiante");
+        String idTicket = crearTicketDelEstudiante();
+        cambiarEstado(idTicket, "EN_PROCESO", null);
+        cambiarEstado(idTicket, "OBSERVADO", "Falta un documento");
+        MvcResult result = responderComo(admin(), idTicket, "Respondo por el estudiante");
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
     }
 
@@ -369,10 +390,43 @@ class TicketControllerTest {
         System.out.println("Ejecutando testNoProcedeDesdeObservado");
         String idTicket = crearTicketDePrueba();
         String idAdmin = crearUsuarioDePrueba("ADMIN");
-        cambiarEstado(idTicket, idAdmin, "EN_PROCESO", null);
-        cambiarEstado(idTicket, idAdmin, "OBSERVADO", "Falta un documento");
-        MvcResult result = cambiarEstado(idTicket, idAdmin, "NO_PROCEDE", "El estudiante no respondio");
+        cambiarEstado(idTicket, "EN_PROCESO", null);
+        cambiarEstado(idTicket, "OBSERVADO", "Falta un documento");
+        MvcResult result = cambiarEstado(idTicket, "NO_PROCEDE", "El estudiante no respondio");
         assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
         assertEquals("NO_PROCEDE", estadoDe(result));
+    }
+
+    /* 20° Test: Un estudiante no puede ver el ticket de otro usuario */
+    @Test
+    void testEstudianteNoVeTicketAjeno() throws Exception {
+        System.out.println("Ejecutando testEstudianteNoVeTicketAjeno");
+        String idTicket = crearTicketDePrueba();
+        crearUsuarioDePrueba("ADMIN");
+        MvcResult comoAdmin = mockMvc.perform(MockMvcRequestBuilders.get(new URI("/api/tickets/" + idTicket)).with(admin())).andReturn();
+        assertEquals(HttpStatus.OK.value(), comoAdmin.getResponse().getStatus());
+
+        String otro = """
+                {
+                  "sNombres": "Otro", "sApellidos": "Estudiante", "sEmail": "prueba.otro@utp.edu.pe",
+                  "sDni": "70011123", "sTelefono": "", "sRol": "ESTANDAR", "sPassword": "clave123"
+                }
+                """;
+        enviar(MockMvcRequestBuilders.post(new URI("/api/usuarios")), otro);
+        RequestPostProcessor otroEstudiante = SecurityMockMvcRequestPostProcessors.user("prueba.otro@utp.edu.pe")
+                .authorities(new SimpleGrantedAuthority("ESTANDAR"));
+        MvcResult comoOtro = mockMvc.perform(MockMvcRequestBuilders.get(new URI("/api/tickets/" + idTicket)).with(otroEstudiante)).andReturn();
+        assertEquals(HttpStatus.NOT_FOUND.value(), comoOtro.getResponse().getStatus());
+        MvcResult lista = mockMvc.perform(MockMvcRequestBuilders.get(new URI("/api/tickets")).with(otroEstudiante)).andReturn();
+        assertFalse(lista.getResponse().getContentAsString().contains("\"nId_Ticket\":" + idTicket + ","));
+    }
+
+    /* 21° Test: Sin token no se accede a los tickets */
+    @Test
+    @WithAnonymousUser
+    void testListarTicketsSinAutenticacion() throws Exception {
+        System.out.println("Ejecutando testListarTicketsSinAutenticacion");
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get(new URI("/api/tickets"))).andReturn();
+        assertEquals(HttpStatus.UNAUTHORIZED.value(), result.getResponse().getStatus());
     }
 }

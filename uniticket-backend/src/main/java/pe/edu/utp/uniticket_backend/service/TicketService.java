@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,8 +66,8 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketDTO crearTicket(TicketCreateDTO datos) {
-        Usuario usuario = buscarUsuario(datos.nId_Usuario(), "Usuario");
+    public TicketDTO crearTicket(TicketCreateDTO datos, String emailSolicitante) {
+        Usuario usuario = buscarUsuarioPorEmail(emailSolicitante);
         if (!TIPOS_VALIDOS.contains(datos.sTipo().toUpperCase())) {
             throw new IllegalArgumentException("Tipo de ticket no válido: " + datos.sTipo());
         }
@@ -84,7 +85,9 @@ public class TicketService {
         return mapearADTO(guardado);
     }
 
-    public List<TicketDTO> listarTickets(String estado, String tipo) {
+    public List<TicketDTO> listarTickets(String estado, String tipo, String emailSolicitante) {
+        Usuario solicitante = buscarUsuarioPorEmail(emailSolicitante);
+        boolean admin = ROL_ADMIN.equals(solicitante.getSRol());
         if (estado != null && !ESTADOS_VALIDOS.contains(estado.toUpperCase())) {
             throw new IllegalArgumentException("Estado no válido: " + estado);
         }
@@ -92,6 +95,7 @@ public class TicketService {
             throw new IllegalArgumentException("Tipo de ticket no válido: " + tipo);
         }
         return ticketRepository.findAll().stream()
+                .filter(t -> admin || t.getNId_Usuario().equals(solicitante.getNId_Usuario()))
                 .filter(t -> estado == null || t.getSEstado().equalsIgnoreCase(estado))
                 .filter(t -> tipo == null || t.getSTipo().equalsIgnoreCase(tipo))
                 .sorted(Comparator.comparing(Ticket::getDFecha_Creacion).reversed())
@@ -99,16 +103,17 @@ public class TicketService {
                 .toList();
     }
 
-    public TicketDetalleDTO obtenerTicketPorId(Long id) {
-        return mapearADetalleDTO(buscarTicket(id));
+    public TicketDetalleDTO obtenerTicketPorId(Long id, String emailSolicitante) {
+        Usuario solicitante = buscarUsuarioPorEmail(emailSolicitante);
+        return mapearADetalleDTO(buscarTicketVisible(id, solicitante));
     }
 
     @Transactional
-    public TicketDetalleDTO cambiarEstado(Long id, TicketEstadoDTO datos) {
+    public TicketDetalleDTO cambiarEstado(Long id, TicketEstadoDTO datos, String emailSolicitante) {
         Ticket ticket = buscarTicket(id);
-        Usuario admin = buscarUsuario(datos.nId_Admin(), "Administrador");
+        Usuario admin = buscarUsuarioPorEmail(emailSolicitante);
         if (!ROL_ADMIN.equals(admin.getSRol())) {
-            throw new IllegalArgumentException("El usuario indicado no es administrador");
+            throw new AccessDeniedException("Solo un administrador puede cambiar el estado");
         }
         String nuevoEstado = datos.sEstado().toUpperCase();
         if (!TRANSICIONES.getOrDefault(ticket.getSEstado(), Set.of()).contains(nuevoEstado)) {
@@ -135,12 +140,12 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketDetalleDTO responderObservacion(Long id, ComentarioDTO datos) {
-        Ticket ticket = buscarTicket(id);
-        if (!OBSERVADO.equals(ticket.getSEstado()) || !ticket.getNId_Usuario().equals(datos.nId_Usuario())) {
+    public TicketDetalleDTO responderObservacion(Long id, ComentarioDTO datos, String emailSolicitante) {
+        Usuario estudiante = buscarUsuarioPorEmail(emailSolicitante);
+        Ticket ticket = buscarTicketVisible(id, estudiante);
+        if (!OBSERVADO.equals(ticket.getSEstado()) || !ticket.getNId_Usuario().equals(estudiante.getNId_Usuario())) {
             throw new IllegalArgumentException("Solo puedes responder una solicitud tuya que esté OBSERVADA");
         }
-        Usuario estudiante = buscarUsuario(datos.nId_Usuario(), "Usuario");
 
         ticket.setSEstado(EN_PROCESO);
         ticket.setDFecha_Actualizacion(LocalDateTime.now());
@@ -161,6 +166,19 @@ public class TicketService {
     private Ticket buscarTicket(Long id) {
         return ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket no encontrado con ID: " + id));
+    }
+
+    private Ticket buscarTicketVisible(Long id, Usuario solicitante) {
+        Ticket ticket = buscarTicket(id);
+        if (!ROL_ADMIN.equals(solicitante.getSRol()) && !ticket.getNId_Usuario().equals(solicitante.getNId_Usuario())) {
+            throw new ResourceNotFoundException("Ticket no encontrado con ID: " + id);
+        }
+        return ticket;
+    }
+
+    private Usuario buscarUsuarioPorEmail(String email) {
+        return usuarioRepository.findBysEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     }
 
     private Usuario buscarUsuario(Long id, String etiqueta) {

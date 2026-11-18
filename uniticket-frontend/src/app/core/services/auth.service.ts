@@ -54,10 +54,9 @@ export class AuthService {
 
   cargarPerfil(): Observable<Usuario> {
     const email = this.emailDelToken();
-    return this.http.get<Usuario[]>(`${API_URL}/usuarios`).pipe(
-      map(usuarios => {
-        const perfil = usuarios.find(u => u.sEmail.toLowerCase() === email?.toLowerCase());
-        if (!perfil) {
+    return this.http.get<Usuario>(`${API_URL}/usuarios/me`).pipe(
+      map(perfil => {
+        if (!perfil || (email && perfil.sEmail.toLowerCase() !== email.toLowerCase())) {
           throw new Error('No se encontró el perfil del usuario autenticado');
         }
         return perfil;

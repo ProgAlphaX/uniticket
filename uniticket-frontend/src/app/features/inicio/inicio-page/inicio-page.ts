@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 
 import { API_URL } from '../../../core/config/api';
 import {
@@ -116,12 +116,16 @@ export class InicioPage {
     this.cargar();
   }
 
+  private cargarUsuarios(): Observable<Usuario[]> {
+    return this.esAdmin() ? this.http.get<Usuario[]>(`${API_URL}/usuarios`) : of([]);
+  }
+
   protected cargar(): void {
     this.cargando.set(true);
     this.error.set(false);
     forkJoin({
       tickets: this.ticketService.listar(),
-      usuarios: this.http.get<Usuario[]>(`${API_URL}/usuarios`),
+      usuarios: this.cargarUsuarios(),
     }).subscribe({
       next: data => {
         console.log('Datos recibidos del servicio:', data);

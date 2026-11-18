@@ -64,7 +64,7 @@ describe('AuthService', () => {
     service.iniciarSesion({ sEmail: ADMIN.sEmail, sPassword: '123456' }).subscribe(u => (perfil = u));
 
     http.expectOne(`${API_URL}/auth/login`).flush(token);
-    http.expectOne(`${API_URL}/usuarios`).flush([ADMIN]);
+    http.expectOne(`${API_URL}/usuarios/me`).flush(ADMIN);
 
     expect(perfil).toEqual(ADMIN);
     expect(service.usuario()).toEqual(ADMIN);

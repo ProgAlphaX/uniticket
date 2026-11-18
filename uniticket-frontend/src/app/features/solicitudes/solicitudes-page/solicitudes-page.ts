@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 
 import { API_URL } from '../../../core/config/api';
 import {
@@ -117,12 +117,20 @@ export class SolicitudesPage {
     this.cargar();
   }
 
+  private cargarUsuarios(): Observable<Usuario[]> {
+    if (this.esAdmin()) {
+      return this.http.get<Usuario[]>(`${API_URL}/usuarios`);
+    }
+    const perfil = this.auth.usuario();
+    return of(perfil ? [perfil] : []);
+  }
+
   protected cargar(): void {
     this.cargando.set(true);
     this.error.set(false);
     forkJoin({
       tickets: this.ticketService.listar(),
-      usuarios: this.http.get<Usuario[]>(`${API_URL}/usuarios`),
+      usuarios: this.cargarUsuarios(),
     }).subscribe({
       next: data => {
         console.log('Datos recibidos del servicio:', data);

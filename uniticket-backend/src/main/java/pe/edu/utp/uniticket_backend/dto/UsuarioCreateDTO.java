@@ -16,6 +16,7 @@ public record UsuarioCreateDTO(
 
         @NotBlank(message = "El email es obligatorio")
         @Email(message = "El email no tiene un formato válido")
+        @Size(max = 100, message = "El email no puede superar 100 caracteres")
         String sEmail,
 
         @NotBlank(message = "El dni es obligatorio")
@@ -29,7 +30,7 @@ public record UsuarioCreateDTO(
         String sRol,
 
         @NotBlank(message = "La contraseña es obligatoria")
-        @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+        @Size(min = 6, max = 72, message = "La contraseña debe tener entre 6 y 72 caracteres")
         String sPassword
 ) {
 }

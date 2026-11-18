@@ -58,7 +58,6 @@ export class DecisionDialog {
     this.error.set(null);
     this.tickets
       .cambiarEstado(this.data.ticket.nId_Ticket, {
-        nId_Admin: admin.nId_Usuario,
         sEstado: this.data.accion,
         sComentario: this.form.getRawValue().sComentario.trim(),
       })

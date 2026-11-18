@@ -50,7 +50,7 @@ describe('AccionesPanel', () => {
 
     vista.querySelector('button')!.click();
 
-    expect(tickets.cambiarEstado).toHaveBeenCalledWith(1, { nId_Admin: 1, sEstado: 'EN_PROCESO', sComentario: null });
+    expect(tickets.cambiarEstado).toHaveBeenCalledWith(1, { sEstado: 'EN_PROCESO', sComentario: null });
     expect(emitidos).toEqual([actualizado]);
   });
 

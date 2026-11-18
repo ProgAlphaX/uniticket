@@ -63,7 +63,6 @@ export class AccionesPanel {
         switchMap(() => {
           this.atendiendo.set(true);
           return this.tickets.cambiarEstado(t.nId_Ticket, {
-            nId_Admin: admin.nId_Usuario,
             sEstado: 'EN_PROCESO',
             sComentario: null,
           });

@@ -39,6 +39,12 @@ public class UsuarioService {
         return usuarios.stream().map(this::mapearADTO).toList();
     }
 
+    public UsuarioDTO obtenerPorEmail(String email) {
+        return usuarioRepository.findBysEmail(email)
+                .map(this::mapearADTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+    }
+
     public List<UsuarioDTO> buscarPorNombre(String nombre) {
         String texto = nombre.trim();
         return java.util.stream.Stream.concat(

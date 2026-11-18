@@ -49,7 +49,6 @@ export class RespuestaForm {
     this.error.set(null);
     this.tickets
       .responder(this.ticket().nId_Ticket, {
-        nId_Usuario: usuario.nId_Usuario,
         sComentario: this.form.getRawValue().sComentario.trim(),
       })
       .subscribe({

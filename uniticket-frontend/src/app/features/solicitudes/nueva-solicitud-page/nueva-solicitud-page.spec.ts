@@ -64,7 +64,6 @@ describe('NuevaSolicitudPage', () => {
     llenar(el);
     el.querySelector('form')!.dispatchEvent(new Event('submit'));
     expect(tickets.crear).toHaveBeenCalledWith({
-      nId_Usuario: ESTUDIANTE.nId_Usuario,
       sTipo: 'PENSION',
       sAsunto: 'Boleta no recibida',
       sDescripcion: 'No me llegó la boleta electrónica de la cuota 4',

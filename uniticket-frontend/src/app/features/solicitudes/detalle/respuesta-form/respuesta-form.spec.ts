@@ -52,7 +52,6 @@ describe('RespuestaForm', () => {
     escribir('  Adjunto el voucher del pago duplicado.  ');
 
     expect(tickets.responder).toHaveBeenCalledWith(2, {
-      nId_Usuario: ESTUDIANTE.nId_Usuario,
       sComentario: 'Adjunto el voucher del pago duplicado.',
     });
     expect(emitidos).toEqual([actualizado]);

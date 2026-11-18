@@ -13,11 +13,14 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -43,6 +46,10 @@ class NotificacionControllerTest {
                 .accept(MediaType.APPLICATION_JSON)).andReturn();
     }
 
+    private RequestPostProcessor como(String email, String rol) {
+        return SecurityMockMvcRequestPostProcessors.user(email).authorities(new SimpleGrantedAuthority(rol));
+    }
+
     private String crearUsuario(String email, String rol) throws Exception {
         String json = """
                 {
@@ -55,30 +62,29 @@ class NotificacionControllerTest {
                   "sPassword": "clave123"
                 }
                 """.formatted(email, rol);
-        MvcResult result = enviar(MockMvcRequestBuilders.post(new URI("/api/usuarios")), json);
+        MvcResult result = enviar(MockMvcRequestBuilders.post(new URI("/api/usuarios")).with(como("seed.admin@utp.edu.pe", "ADMIN")), json);
         assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
         return extraerId(result.getResponse().getContentAsString(), "nId_Usuario");
     }
 
     /* Crea un ticket del estudiante, lo atiende y lo observa: el estudiante recibe 2 avisos */
     private String prepararTicketObservado() throws Exception {
-        String idEstudiante = crearUsuario(EMAIL_ESTUDIANTE, "ESTANDAR");
-        String idAdmin = crearUsuario(EMAIL_ADMIN, "ADMIN");
+        crearUsuario(EMAIL_ESTUDIANTE, "ESTANDAR");
+        crearUsuario(EMAIL_ADMIN, "ADMIN");
         String ticket = """
                 {
-                  "nId_Usuario": %s,
                   "sTipo": "PENSION",
                   "sAsunto": "Pago duplicado",
                   "sDescripcion": "El banco me cobro dos veces la cuota"
                 }
-                """.formatted(idEstudiante);
-        MvcResult creado = enviar(MockMvcRequestBuilders.post(new URI("/api/tickets")), ticket);
+                """;
+        MvcResult creado = enviar(MockMvcRequestBuilders.post(new URI("/api/tickets")).with(como(EMAIL_ESTUDIANTE, "ESTANDAR")), ticket);
         String idTicket = extraerId(creado.getResponse().getContentAsString(), "nId_Ticket");
         String uri = "/api/tickets/" + idTicket + "/estado";
-        enviar(MockMvcRequestBuilders.put(new URI(uri)),
-                "{\"nId_Admin\": " + idAdmin + ", \"sEstado\": \"EN_PROCESO\"}");
-        enviar(MockMvcRequestBuilders.put(new URI(uri)),
-                "{\"nId_Admin\": " + idAdmin + ", \"sEstado\": \"OBSERVADO\", \"sComentario\": \"Adjunta el voucher\"}");
+        enviar(MockMvcRequestBuilders.put(new URI(uri)).with(como(EMAIL_ADMIN, "ADMIN")),
+                "{\"sEstado\": \"EN_PROCESO\"}");
+        enviar(MockMvcRequestBuilders.put(new URI(uri)).with(como(EMAIL_ADMIN, "ADMIN")),
+                "{\"sEstado\": \"OBSERVADO\", \"sComentario\": \"Adjunta el voucher\"}");
         return idTicket;
     }
 
@@ -147,6 +153,6 @@ class NotificacionControllerTest {
     @WithAnonymousUser
     void testListarSinAutenticacion() throws Exception {
         System.out.println("Ejecutando testListarSinAutenticacion");
-        assertEquals(HttpStatus.FORBIDDEN.value(), listar().getResponse().getStatus());
+        assertEquals(HttpStatus.UNAUTHORIZED.value(), listar().getResponse().getStatus());
     }
 }

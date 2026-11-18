@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@WithMockUser
+@WithMockUser(authorities = "ADMIN")
 class UsuarioControllerTest {
 
     @Autowired
@@ -262,7 +262,7 @@ class UsuarioControllerTest {
 
     /* 15° Test: Un usuario no puede desactivar su propia cuenta */
     @Test
-    @WithMockUser(username = "jorge.vidal.prueba@utp.edu.pe")
+    @WithMockUser(username = "jorge.vidal.prueba@utp.edu.pe", authorities = "ADMIN")
     void testNoSePuedeDesactivarLaPropiaCuenta() throws Exception {
         System.out.println("Ejecutando testNoSePuedeDesactivarLaPropiaCuenta");
         String id = crearUsuarioDePrueba();
@@ -277,5 +277,28 @@ class UsuarioControllerTest {
                 .content(json)
                 .accept(MediaType.APPLICATION_JSON);
         return mockMvc.perform(req).andReturn();
+    }
+
+    /* Un usuario sin rol ADMIN no puede listar ni crear usuarios */
+    @Test
+    @WithMockUser(username = "estudiante.prueba@utp.edu.pe", authorities = "ESTANDAR")
+    void testEstudianteNoPuedeListarNiCrearUsuarios() throws Exception {
+        System.out.println("Ejecutando testEstudianteNoPuedeListarNiCrearUsuarios");
+        MvcResult lista = mockMvc.perform(MockMvcRequestBuilders.get(new URI("/api/usuarios"))).andReturn();
+        assertEquals(HttpStatus.FORBIDDEN.value(), lista.getResponse().getStatus());
+        MvcResult creado = mockMvc.perform(MockMvcRequestBuilders.post(new URI("/api/usuarios"))
+                .contentType(MediaType.APPLICATION_JSON).content("{}")).andReturn();
+        assertEquals(HttpStatus.FORBIDDEN.value(), creado.getResponse().getStatus());
+    }
+
+    /* El perfil propio es accesible con cualquier rol */
+    @Test
+    @WithMockUser(username = "julio.admin@utp.edu.pe", authorities = "ESTANDAR")
+    void testMiPerfilDevuelveSoloAlUsuarioAutenticado() throws Exception {
+        System.out.println("Ejecutando testMiPerfilDevuelveSoloAlUsuarioAutenticado");
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get(new URI("/api/usuarios/me"))).andReturn();
+        assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
+        assertTrue(result.getResponse().getContentAsString().contains("\"sEmail\":\"julio.admin@utp.edu.pe\""));
+        assertFalse(result.getResponse().getContentAsString().startsWith("["));
     }
 }

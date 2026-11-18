@@ -18,19 +18,16 @@ export interface TicketDetalle extends Ticket {
 }
 
 export interface TicketCreate {
-  nId_Usuario: number;
   sTipo: TipoTicket;
   sAsunto: string;
   sDescripcion: string;
 }
 
 export interface TicketEstado {
-  nId_Admin: number;
   sEstado: Exclude<EstadoTicket, 'PENDIENTE'>;
   sComentario: string | null;
 }
 
 export interface Comentario {
-  nId_Usuario: number;
   sComentario: string;
 }

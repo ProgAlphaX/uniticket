@@ -35,7 +35,7 @@ describe('TicketService', () => {
   });
 
   it('crea una solicitud con POST', () => {
-    const nueva = { nId_Usuario: 2, sTipo: 'CERTIFICADO' as const, sAsunto: 'Constancia', sDescripcion: 'Necesito mi constancia de matrícula' };
+    const nueva = { sTipo: 'CERTIFICADO' as const, sAsunto: 'Constancia', sDescripcion: 'Necesito mi constancia de matrícula' };
     service.crear(nueva).subscribe();
     const req = http.expectOne(`${API_URL}/tickets`);
     expect(req.request.method).toBe('POST');

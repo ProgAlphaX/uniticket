@@ -3,6 +3,8 @@ package pe.edu.utp.uniticket_backend.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,8 +34,9 @@ public class TicketController {
 
     /* 1° Rest: Crear Ticket */
     @PostMapping
-    public ResponseEntity<TicketDTO> crearTicket(@Valid @RequestBody TicketCreateDTO datos) {
-        TicketDTO ticketCreado = ticketService.crearTicket(datos);
+    public ResponseEntity<TicketDTO> crearTicket(@Valid @RequestBody TicketCreateDTO datos,
+            Authentication authentication) {
+        TicketDTO ticketCreado = ticketService.crearTicket(datos, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ticketCreado);
     }
 
@@ -41,29 +44,34 @@ public class TicketController {
     @GetMapping
     public ResponseEntity<List<TicketDTO>> listarTickets(
             @RequestParam(name = "estado", required = false) String estado,
-            @RequestParam(name = "tipo", required = false) String tipo) {
-        return ResponseEntity.ok(ticketService.listarTickets(estado, tipo));
+            @RequestParam(name = "tipo", required = false) String tipo,
+            Authentication authentication) {
+        return ResponseEntity.ok(ticketService.listarTickets(estado, tipo, authentication.getName()));
     }
 
     /* 3° Rest: Obtener Ticket por ID con su seguimiento */
     @GetMapping("/{id}")
-    public ResponseEntity<TicketDetalleDTO> obtenerTicketPorId(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(ticketService.obtenerTicketPorId(id));
+    public ResponseEntity<TicketDetalleDTO> obtenerTicketPorId(@PathVariable("id") Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(ticketService.obtenerTicketPorId(id, authentication.getName()));
     }
 
     /* 4° Rest: Cambiar estado (atender, observar, procede, no procede) */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}/estado")
     public ResponseEntity<TicketDetalleDTO> cambiarEstado(
             @PathVariable("id") Long id,
-            @Valid @RequestBody TicketEstadoDTO datos) {
-        return ResponseEntity.ok(ticketService.cambiarEstado(id, datos));
+            @Valid @RequestBody TicketEstadoDTO datos,
+            Authentication authentication) {
+        return ResponseEntity.ok(ticketService.cambiarEstado(id, datos, authentication.getName()));
     }
 
     /* 5° Rest: El estudiante responde una observación */
     @PostMapping("/{id}/comentarios")
     public ResponseEntity<TicketDetalleDTO> responderObservacion(
             @PathVariable("id") Long id,
-            @Valid @RequestBody ComentarioDTO datos) {
-        return ResponseEntity.ok(ticketService.responderObservacion(id, datos));
+            @Valid @RequestBody ComentarioDTO datos,
+            Authentication authentication) {
+        return ResponseEntity.ok(ticketService.responderObservacion(id, datos, authentication.getName()));
     }
 }

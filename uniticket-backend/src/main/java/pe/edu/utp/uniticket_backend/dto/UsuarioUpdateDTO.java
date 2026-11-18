@@ -16,6 +16,7 @@ public record UsuarioUpdateDTO(
 
         @NotBlank(message = "El email es obligatorio")
         @Email(message = "El email no tiene un formato válido")
+        @Size(max = 100, message = "El email no puede superar 100 caracteres")
         String sEmail,
 
         @Pattern(regexp = "^$|9[0-9]{8}", message = "El celular debe tener 9 dígitos y empezar con 9")
