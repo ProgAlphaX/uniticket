@@ -1,65 +1,36 @@
-import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
 
-import { Usuario } from '../../../core/models/usuario';
+import { ROLES, RolUsuario } from '../../../core/config/catalogos';
+import { Usuario, UsuarioCreate, UsuarioUpdate } from '../../../core/models/usuario';
 
 @Component({
   selector: 'ut-usuario-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-  ],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule],
   templateUrl: './usuario-dialog.html',
-  styleUrls: ['./usuario-dialog.scss'],
+  styleUrl: './usuario-dialog.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UsuarioDialogComponent {
-  private readonly fb = inject(FormBuilder);
-  readonly dialogRef = inject(MatDialogRef<UsuarioDialogComponent>);
-  readonly data = inject<Usuario | null>(MAT_DIALOG_DATA, { optional: true });
+export class UsuarioDialog {
+  private readonly ref = inject<MatDialogRef<UsuarioDialog, UsuarioCreate | UsuarioUpdate>>(MatDialogRef);
+  private readonly usuario = inject<Usuario | null>(MAT_DIALOG_DATA, { optional: true });
 
-  readonly isEditMode = !!this.data;
+  protected readonly esEdicion = !!this.usuario;
+  protected readonly roles = Object.entries(ROLES) as [RolUsuario, string][];
 
-  readonly form: FormGroup = this.fb.group({
-    sNombres: [
-      this.data?.sNombres ?? '',
-      [Validators.required, Validators.maxLength(80)],
-    ],
-    sApellidos: [
-      this.data?.sApellidos ?? '',
-      [Validators.required, Validators.maxLength(80)],
-    ],
-    sEmail: [
-      this.data?.sEmail ?? '',
-      [Validators.required, Validators.email, Validators.maxLength(100)],
-    ],
-    sDni: [
-      this.data?.sDni ?? '',
-      this.isEditMode ? [] : [Validators.required, Validators.pattern(/^\d{8}$/)],
-    ],
-    sTelefono: [
-      this.data?.sTelefono ?? '',
-      [Validators.pattern(/^9\d{8}$/)],
-    ],
-    sRol: [
-      this.data?.sRol ?? '',
-      this.isEditMode ? [] : [Validators.required],
-    ],
-    sPassword: [
-      '',
-      this.isEditMode ? [] : [Validators.required, Validators.minLength(6)],
-    ],
+  readonly form = inject(FormBuilder).nonNullable.group({
+    sNombres: [this.usuario?.sNombres ?? '', [Validators.required, Validators.maxLength(80)]],
+    sApellidos: [this.usuario?.sApellidos ?? '', [Validators.required, Validators.maxLength(80)]],
+    sEmail: [this.usuario?.sEmail ?? '', [Validators.required, Validators.email, Validators.maxLength(100)]],
+    sDni: ['', this.esEdicion ? [] : [Validators.required, Validators.pattern(/^\d{8}$/)]],
+    sTelefono: [this.usuario?.sTelefono ?? '', [Validators.pattern(/^9\d{8}$/)]],
+    sRol: ['' as RolUsuario | '', this.esEdicion ? [] : [Validators.required]],
+    sPassword: ['', this.esEdicion ? [] : [Validators.required, Validators.minLength(6)]],
   });
 
   guardar(): void {
@@ -68,28 +39,24 @@ export class UsuarioDialogComponent {
       return;
     }
 
-    const value = this.form.getRawValue();
-    const contacto = {
-      sNombres: value.sNombres.trim(),
-      sApellidos: value.sApellidos.trim(),
-      sEmail: value.sEmail.trim(),
-      sTelefono: value.sTelefono.trim(),
+    const valor = this.form.getRawValue();
+    const datos: UsuarioUpdate = {
+      sNombres: valor.sNombres.trim(),
+      sApellidos: valor.sApellidos.trim(),
+      sEmail: valor.sEmail.trim(),
+      sTelefono: valor.sTelefono.trim(),
     };
 
-    if (this.isEditMode) {
-      this.dialogRef.close(contacto);
+    if (this.esEdicion) {
+      this.ref.close(datos);
       return;
     }
 
-    this.dialogRef.close({
-      ...contacto,
-      sDni: value.sDni.trim(),
-      sRol: value.sRol,
-      sPassword: value.sPassword,
+    this.ref.close({
+      ...datos,
+      sDni: valor.sDni.trim(),
+      sRol: valor.sRol as RolUsuario,
+      sPassword: valor.sPassword,
     });
-  }
-
-  cancelar(): void {
-    this.dialogRef.close();
   }
 }

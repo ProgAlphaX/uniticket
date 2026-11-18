@@ -2,22 +2,22 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 import { Usuario } from '../../../core/models/usuario';
-import { UsuarioDialogComponent } from './usuario-dialog';
+import { UsuarioDialog } from './usuario-dialog';
 
-describe('UsuarioDialogComponent', () => {
+describe('UsuarioDialog', () => {
   let closeDialog: jasmine.Spy;
 
   function crearComponente(data: Usuario | null = null) {
     closeDialog = jasmine.createSpy('close');
     TestBed.configureTestingModule({
-      imports: [UsuarioDialogComponent],
+      imports: [UsuarioDialog],
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: data },
         { provide: MatDialogRef, useValue: { close: closeDialog } },
       ],
     });
 
-    return TestBed.createComponent(UsuarioDialogComponent);
+    return TestBed.createComponent(UsuarioDialog);
   }
 
   it('permite omitir el celular y exige un rol al crear un usuario', () => {
@@ -33,10 +33,10 @@ describe('UsuarioDialogComponent', () => {
       sPassword: 'secreto1',
     });
 
-    expect(component.form.controls['sTelefono'].valid).toBeTrue();
-    expect(component.form.controls['sRol'].hasError('required')).toBeTrue();
+    expect(component.form.controls.sTelefono.valid).toBeTrue();
+    expect(component.form.controls.sRol.hasError('required')).toBeTrue();
 
-    component.form.controls['sRol'].setValue('ESTANDAR');
+    component.form.controls.sRol.setValue('ESTANDAR');
     expect(component.form.valid).toBeTrue();
 
     component.guardar();
@@ -80,7 +80,7 @@ describe('UsuarioDialogComponent', () => {
 
   it('valida que un celular informado tenga 9 dígitos y empiece con 9', () => {
     const fixture = crearComponente();
-    const telefono = fixture.componentInstance.form.controls['sTelefono'];
+    const telefono = fixture.componentInstance.form.controls.sTelefono;
 
     telefono.setValue('123456789');
     expect(telefono.hasError('pattern')).toBeTrue();

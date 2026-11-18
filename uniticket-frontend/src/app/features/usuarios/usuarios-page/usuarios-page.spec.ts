@@ -1,103 +1,89 @@
-import { TestBed } from '@angular/core/testing';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 
 import { Usuario } from '../../../core/models/usuario';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UsuarioService } from '../data/usuario.service';
 import { UsuariosPage } from './usuarios-page';
 
-describe('UsuariosPage', () => {
-  const usuario: Usuario = {
-    nId_Usuario: 1,
-    sNombres: 'Ana',
-    sApellidos: 'Torres',
-    sNombreCompleto: 'Ana Torres',
-    sEmail: 'ana@utp.edu.pe',
-    sDni: '12345678',
-    sTelefono: '987654321',
-    sRol: 'ESTANDAR',
-    sEstado: 'ACTIVO',
-  };
+const ADMIN: Usuario = {
+  nId_Usuario: 1, sNombres: 'Julio', sApellidos: 'Admin', sNombreCompleto: 'Julio Admin',
+  sEmail: 'julio.admin@utp.edu.pe', sDni: '70123456', sTelefono: null, sRol: 'ADMIN', sEstado: 'ACTIVO',
+};
+const ACTIVA: Usuario = {
+  nId_Usuario: 2, sNombres: 'Ana', sApellidos: 'Torres', sNombreCompleto: 'Ana Torres',
+  sEmail: 'ana@utp.edu.pe', sDni: '12345678', sTelefono: '987654321', sRol: 'ESTANDAR', sEstado: 'ACTIVO',
+};
+const INACTIVA: Usuario = {
+  nId_Usuario: 3, sNombres: 'Ana', sApellidos: 'Pérez', sNombreCompleto: 'Ana Pérez',
+  sEmail: 'ana.perez@utp.edu.pe', sDni: '87654321', sTelefono: null, sRol: 'ESTANDAR', sEstado: 'INACTIVO',
+};
 
-  it('combina el filtro de nombre con el estado seleccionado', () => {
-    const resultados: Usuario[] = [
-      {
-        nId_Usuario: 1,
-        sNombres: 'Ana',
-        sApellidos: 'Torres',
-        sNombreCompleto: 'Ana Torres',
-        sEmail: 'ana.activa@utp.edu.pe',
-        sDni: '12345678',
-        sTelefono: null,
-        sRol: 'ESTANDAR',
-        sEstado: 'ACTIVO',
-      },
-      {
-        nId_Usuario: 2,
-        sNombres: 'Ana',
-        sApellidos: 'Pérez',
-        sNombreCompleto: 'Ana Pérez',
-        sEmail: 'ana.inactiva@utp.edu.pe',
-        sDni: '87654321',
-        sTelefono: null,
-        sRol: 'ESTANDAR',
-        sEstado: 'INACTIVO',
-      },
-    ];
-    const usuarioService = jasmine.createSpyObj<UsuarioService>('UsuarioService', [
-      'getUsuarios',
-      'buscar',
-      'crearUsuario',
-      'actualizar',
-      'cambiarEstado',
+describe('UsuariosPage', () => {
+  let servicio: jasmine.SpyObj<UsuarioService>;
+  let dialogo: { open: jasmine.Spy };
+  let fixture: ComponentFixture<UsuariosPage>;
+
+  beforeEach(() => {
+    servicio = jasmine.createSpyObj<UsuarioService>('UsuarioService', [
+      'getUsuarios', 'buscar', 'crearUsuario', 'actualizar', 'cambiarEstado',
     ]);
-    usuarioService.buscar.and.returnValue(of(resultados));
-    usuarioService.getUsuarios.and.returnValue(of(resultados));
+    servicio.getUsuarios.and.returnValue(of([ADMIN, ACTIVA, INACTIVA]));
+    servicio.buscar.and.returnValue(of([ACTIVA, INACTIVA]));
+    servicio.cambiarEstado.and.returnValue(of({ ...ACTIVA, sEstado: 'INACTIVO' }));
+    dialogo = { open: jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(true) }) };
 
     TestBed.configureTestingModule({
       imports: [UsuariosPage],
       providers: [
-        { provide: UsuarioService, useValue: usuarioService },
-        { provide: MatDialog, useValue: { open: jasmine.createSpy('open') } },
-        { provide: ToastService, useValue: { ok: jasmine.createSpy('ok'), error: jasmine.createSpy('error') } },
+        { provide: UsuarioService, useValue: servicio },
+        { provide: MatDialog, useValue: dialogo },
+        { provide: ToastService, useValue: jasmine.createSpyObj('ToastService', ['ok', 'error']) },
+        { provide: AuthService, useValue: { usuario: signal(ADMIN) } },
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false, breakpoints: {} }) } },
       ],
     });
-
-    const page = TestBed.createComponent(UsuariosPage).componentInstance;
-    page.filtroForm.setValue({ nombre: ' Ana ', estado: 'INACTIVO' }, { emitEvent: false });
-    page.aplicarFiltros();
-
-    expect(usuarioService.buscar).toHaveBeenCalledWith('Ana');
-    expect(page.usuarios().map((usuario) => usuario.nId_Usuario)).toEqual([2]);
+    fixture = TestBed.createComponent(UsuariosPage);
+    fixture.detectChanges();
   });
 
-  it('muestra el estado y los botones con el estilo del prototipo', () => {
-    const usuarioService = jasmine.createSpyObj<UsuarioService>('UsuarioService', [
-      'getUsuarios',
-      'buscar',
-      'crearUsuario',
-      'actualizar',
-      'cambiarEstado',
-    ]);
-    usuarioService.getUsuarios.and.returnValue(of([usuario]));
-    usuarioService.buscar.and.returnValue(of([usuario]));
+  function filas(): HTMLElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('tr.mat-mdc-row'));
+  }
 
-    TestBed.configureTestingModule({
-      imports: [UsuariosPage],
-      providers: [
-        { provide: UsuarioService, useValue: usuarioService },
-        { provide: MatDialog, useValue: { open: jasmine.createSpy('open') } },
-        { provide: ToastService, useValue: { ok: jasmine.createSpy('ok'), error: jasmine.createSpy('error') } },
-      ],
-    });
+  it('lista los usuarios con su estado y los contadores', () => {
+    expect(servicio.getUsuarios).toHaveBeenCalledWith(undefined);
+    expect(filas().length).toBe(3);
+    expect(filas()[1].querySelector('ut-status-pill')?.textContent).toContain('Activo');
+    expect(fixture.nativeElement.querySelector('.resumen').textContent).toContain('Activos 2');
+    expect(fixture.nativeElement.querySelector('.resumen').textContent).toContain('Inactivos 1');
+  });
 
-    const fixture = TestBed.createComponent(UsuariosPage);
-    fixture.detectChanges();
+  it('combina la búsqueda por nombre con el filtro de estado', () => {
+    fixture.componentInstance.filtroForm.setValue({ nombre: ' Ana ', estado: 'INACTIVO' });
+    fixture.componentInstance.aplicarFiltros();
 
-    const row = fixture.nativeElement.querySelector('.user-row') as HTMLTableRowElement;
-    expect(row.querySelector('.btn-out')?.textContent).toContain('Editar');
-    expect(row.querySelector('.btn-no')?.textContent).toContain('Desactivar');
-    expect(row.querySelector('ut-status-pill')?.textContent).toContain('Activo');
+    expect(servicio.buscar).toHaveBeenCalledWith('Ana');
+    expect(fixture.componentInstance.usuarios().map(u => u.nId_Usuario)).toEqual([3]);
+  });
+
+  it('no permite desactivar la cuenta propia', () => {
+    const propia = filas()[0];
+    expect(propia.textContent).toContain('Tu cuenta');
+    expect(propia.textContent).not.toContain('Desactivar');
+    expect(filas()[1].textContent).toContain('Desactivar');
+    expect(filas()[2].textContent).toContain('Activar');
+  });
+
+  it('desactiva un usuario tras confirmar', () => {
+    const boton = Array.from(filas()[1].querySelectorAll('button')).find(b => b.textContent?.includes('Desactivar'))!;
+    boton.click();
+
+    expect(dialogo.open).toHaveBeenCalled();
+    expect(servicio.cambiarEstado).toHaveBeenCalledWith(2, 'INACTIVO');
   });
 });

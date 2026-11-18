@@ -1,49 +1,30 @@
-.usuario-form {
-  display: block;
-}
-
-.dialog-content {
-  max-height: min(68vh, 640px);
-  padding-top: 4px;
-}
-
-.dialog-description {
+.descripcion {
   margin: 0 0 18px;
-  color: #62688a;
+  color: var(--ut-ink-3);
   font-size: 14px;
 }
 
-.form-grid {
+.campos {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
+  gap: 4px 14px;
+
+  mat-form-field {
+    width: 100%;
+  }
 }
 
-.form-grid mat-form-field {
-  width: 100%;
-}
-
-.full-width {
+.completo {
   grid-column: 1 / -1;
 }
 
-.dialog-actions {
+mat-dialog-actions {
   gap: 8px;
-  padding: 12px 24px 20px;
+  padding: 8px 24px 20px;
 }
 
-@media (max-width: 560px) {
-  .form-grid {
+@media (max-width: 559.98px) {
+  .campos {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .full-width {
-    grid-column: auto;
-  }
-
-  .dialog-actions {
-    flex-wrap: wrap;
-    padding-right: 16px;
-    padding-left: 16px;
   }
 }

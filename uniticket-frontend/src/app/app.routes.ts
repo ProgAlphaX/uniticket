@@ -5,7 +5,6 @@ import { authGuard } from './core/guards/auth.guard';
 import { estudianteGuard } from './core/guards/estudiante.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { AppShell } from './layout/app-shell/app-shell';
-import { UsuariosPage } from './features/usuarios/usuarios-page/usuarios-page';
 
 const detalle = () => import('./features/solicitudes/detalle/detalle-page/detalle-page').then(m => m.DetallePage);
 const solicitudes = () =>
@@ -29,7 +28,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/inicio/inicio-page/inicio-page').then(m => m.InicioPage),
       },
 
-      // Estudiante
       {
         path: 'solicitudes',
         canActivate: [estudianteGuard],
@@ -50,7 +48,6 @@ export const routes: Routes = [
         loadComponent: detalle,
       },
 
-      // Administrador
       {
         path: 'admin',
         canActivate: [adminGuard],
@@ -71,11 +68,4 @@ export const routes: Routes = [
     ],
   },
   { path: '**', redirectTo: '' },
-
-  // Usuarios
-  {
-    path: 'admin/usuarios',
-    loadComponent: () => import('./features/usuarios/usuarios-page/usuarios-page').then(m => m.UsuariosPage),
-    canActivate: [adminGuard]
-  }
 ];
