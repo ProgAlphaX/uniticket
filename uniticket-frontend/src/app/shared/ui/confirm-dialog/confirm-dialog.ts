@@ -11,10 +11,6 @@ export interface ConfirmDialogData {
   peligro?: boolean;
 }
 
-/**
- * Diálogo «¿Estás seguro…?». Devuelve true al confirmar.
- * Uso: dialog.open(ConfirmDialog, { data }).afterClosed()
- */
 @Component({
   selector: 'ut-confirm-dialog',
   imports: [MatDialogModule, MatButtonModule, MatIconModule],

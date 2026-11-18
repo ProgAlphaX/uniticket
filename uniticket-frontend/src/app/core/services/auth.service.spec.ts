@@ -7,7 +7,6 @@ import { API_URL } from '../config/api';
 import { Usuario } from '../models/usuario';
 import { AuthService } from './auth.service';
 
-/** Genera un JWT falso (sin firma válida) con el email y la expiración indicados. */
 export function crearToken(email: string, expiraEnSegundos = 3600): string {
   const payload = btoa(JSON.stringify({ sub: email, exp: Math.floor(Date.now() / 1000) + expiraEnSegundos }));
   return `cabecera.${payload}.firma`;

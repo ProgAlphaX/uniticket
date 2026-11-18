@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
 import { ESTADOS, ESTADOS_USUARIO, EstadoTicket, EstadoUsuario } from '../../../core/config/catalogos';
 
-/** Estado de una solicitud o de un usuario como píldora de color con texto. */
 @Component({
   selector: 'ut-status-pill',
   templateUrl: './status-pill.html',

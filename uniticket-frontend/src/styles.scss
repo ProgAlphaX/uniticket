@@ -24,7 +24,6 @@ html {
     container-shape: 0,
   ));
 
-  // Color de marca (índigo) en los botones principales
   @include mat.button-overrides((
     filled-container-color: #3b4fd8,
     filled-label-text-color: #ffffff,
@@ -73,13 +72,11 @@ h4 {
   font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 
-/* Campos outline más redondeados */
 .mat-mdc-form-field.mat-form-field-appearance-outline {
   --mdc-outlined-text-field-container-shape: 12px;
   --mat-form-field-outlined-container-shape: 12px;
 }
 
-/* Tarjeta base reutilizable */
 .ut-card {
   background: var(--ut-surface);
   border: 1px solid var(--ut-line);

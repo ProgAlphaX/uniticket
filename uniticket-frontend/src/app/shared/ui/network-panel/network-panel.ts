@@ -5,7 +5,6 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { RequestLogService } from '../../../core/services/request-log.service';
 
-/** Consola de red propia (alternativa a F12). Se abre y cierra con la tecla R. Solo en desarrollo. */
 @Component({
   selector: 'ut-network-panel',
   imports: [JsonPipe, MatButtonModule, MatIconModule],

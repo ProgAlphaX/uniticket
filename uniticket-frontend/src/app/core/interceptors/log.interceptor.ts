@@ -4,7 +4,6 @@ import { tap } from 'rxjs';
 
 import { RequestLogService } from '../services/request-log.service';
 
-/** Registra cada petición para la consola de red. Solo se activa en desarrollo (ver app.config.ts). */
 export const logInterceptor: HttpInterceptorFn = (req, next) => {
   const log = inject(RequestLogService);
   const inicio = performance.now();

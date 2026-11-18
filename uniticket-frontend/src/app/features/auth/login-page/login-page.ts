@@ -11,7 +11,6 @@ import { Router } from '@angular/router';
 import { ApiError } from '../../../core/models/api-error';
 import { AuthService } from '../../../core/services/auth.service';
 
-/** FRM-01 · Iniciar sesión */
 @Component({
   selector: 'ut-login-page',
   imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],

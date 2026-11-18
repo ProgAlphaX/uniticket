@@ -14,7 +14,6 @@ export class AuthService {
   private router = inject(Router);
   private readonly TOKEN_KEY = 'access_token';
 
-  /** Usuario autenticado (se recupera de sessionStorage al recargar la página). */
   readonly usuario = signal<Usuario | null>(this.leerPerfil());
   readonly esAdmin = computed(() => this.usuario()?.sRol === 'ADMIN');
 
@@ -46,7 +45,6 @@ export class AuthService {
     return typeof exp !== 'number' || exp * 1000 > Date.now();
   }
 
-  /** Login completo: obtiene el token y luego el perfil del usuario cuyo email está en el token. */
   iniciarSesion(credenciales: LoginRequest): Observable<Usuario> {
     return this.getToken(credenciales).pipe(
       tap(token => this.guardarToken(token)),

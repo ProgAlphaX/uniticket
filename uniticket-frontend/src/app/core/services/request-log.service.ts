@@ -12,7 +12,6 @@ export interface EntradaRed {
   ms: number;
 }
 
-/** Guarda las últimas peticiones HTTP para la consola de red (solo en desarrollo). */
 @Injectable({ providedIn: 'root' })
 export class RequestLogService {
   private secuencia = 0;

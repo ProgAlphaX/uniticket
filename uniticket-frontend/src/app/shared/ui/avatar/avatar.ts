@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-/** Iniciales del usuario sobre un color fijo que depende de su id. */
 @Component({
   selector: 'ut-avatar',
   templateUrl: './avatar.html',

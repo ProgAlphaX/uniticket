@@ -14,7 +14,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(peticion).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Token vencido o inválido: el backend responde 403 en rutas protegidas
       const esLogin = req.url.endsWith('/auth/login');
       if (!esLogin && token && (error.status === 401 || error.status === 403)) {
         authService.cerrarSesion();
