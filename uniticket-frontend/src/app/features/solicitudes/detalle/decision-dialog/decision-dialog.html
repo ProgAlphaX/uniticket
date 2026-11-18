@@ -1,0 +1,36 @@
+<header class="head">
+  <span class="mi" [class]="'mi ' + cfg.tono"><mat-icon fontSet="material-symbols-rounded">{{ cfg.icono }}</mat-icon></span>
+  <div>
+    <h2 mat-dialog-title>{{ cfg.titulo }}</h2>
+    <p>{{ data.ticket.sNum_Ticket }} · {{ data.ticket.sAsunto }}</p>
+  </div>
+</header>
+
+<form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+  <mat-dialog-content>
+    @if (error(); as msg) {
+      <div class="alert" role="alert">
+        <mat-icon fontSet="material-symbols-rounded">error</mat-icon>
+        <span><b>No se pudo guardar</b>{{ msg }}</span>
+      </div>
+    }
+    <mat-form-field appearance="outline">
+      <mat-label>{{ cfg.etiqueta }}</mat-label>
+      <textarea matInput formControlName="sComentario" rows="4" maxlength="1000" cdkFocusInitial></textarea>
+      <mat-hint>{{ cfg.ayuda }}</mat-hint>
+      <mat-hint align="end">{{ form.controls.sComentario.value.length }}/1000</mat-hint>
+      @if (form.controls.sComentario.hasError('required')) {
+        <mat-error>Este campo es obligatorio</mat-error>
+      } @else if (form.controls.sComentario.hasError('minlength')) {
+        <mat-error>Escribe al menos 10 caracteres</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" mat-dialog-close [disabled]="guardando()">Cancelar</button>
+    <button matButton="filled" type="submit" [class]="'btn-' + cfg.tono" [disabled]="guardando()">
+      {{ guardando() ? 'Guardando…' : cfg.boton }}
+    </button>
+  </mat-dialog-actions>
+</form>

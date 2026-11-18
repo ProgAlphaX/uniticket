@@ -1,0 +1,16 @@
+<ol class="stepper" aria-label="Progreso de la solicitud">
+  @for (p of pasos(); track $index) {
+    <li [class]="p.clase + (p.clase === 'cur' ? ' ' + estado() : '')" [attr.aria-current]="p.clase === 'cur' ? 'step' : null">
+      <span class="c">
+        @if (p.clase === 'done' || (p.clase === 'cur' && estado() === 'PROCEDE')) {
+          <mat-icon fontSet="material-symbols-rounded">check</mat-icon>
+        } @else if (p.clase === 'cur' && estado() === 'NO_PROCEDE') {
+          <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+        } @else {
+          {{ $index + 1 }}
+        }
+      </span>
+      <b>{{ p.etiqueta }}</b>
+    </li>
+  }
+</ol>
