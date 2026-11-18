@@ -35,7 +35,6 @@ mat-icon { font-size: 18px; width: 18px; height: 18px; }
   small { font-size: 12.5px; color: var(--ut-ink-3); font-weight: 600; }
 }
 
-/* Encabezado */
 .dh { padding: 20px; }
 .dh-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .num { font: 800 14px/1 'Nunito', sans-serif; color: var(--ut-ink-3); }
@@ -62,7 +61,6 @@ mat-icon { font-size: 18px; width: 18px; height: 18px; }
 }
 .estado-msg { padding: 4px 18px 18px; font-size: 13.5px; color: var(--ut-ink-3); line-height: 1.5; }
 
-/* Ficha y datos */
 .prof {
   display: flex;
   align-items: center;
@@ -86,7 +84,6 @@ mat-icon { font-size: 18px; width: 18px; height: 18px; }
   span { display: block; color: var(--ut-ink); font-weight: 600; overflow-wrap: anywhere; }
 }
 
-/* Carga y error */
 .slot { display: grid; gap: 12px; padding: 18px; }
 .skel {
   height: 14px;

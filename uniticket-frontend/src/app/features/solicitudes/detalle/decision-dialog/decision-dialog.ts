@@ -24,10 +24,6 @@ const CONFIG: Record<AccionDecision, { icono: string; tono: string; titulo: stri
   NO_PROCEDE: { icono: 'cancel', tono: 'no', titulo: 'Marcar como no procede', ayuda: 'La solicitud se cierra. Explica el motivo con claridad.', etiqueta: 'Motivo', boton: 'Confirmar: no procede' },
 };
 
-/**
- * FRM-04 · Decisión del administrador con comentario obligatorio (op. 10).
- * Uso: dialog.open(DecisionDialog, { data }).afterClosed() → TicketDetalle | undefined
- */
 @Component({
   selector: 'ut-decision-dialog',
   imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],

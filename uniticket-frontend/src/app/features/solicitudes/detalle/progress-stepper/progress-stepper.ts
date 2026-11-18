@@ -9,7 +9,6 @@ interface Paso {
   clase: 'done' | 'cur' | '';
 }
 
-/** Registrada → En proceso → (Observada) → Decisión. */
 @Component({
   selector: 'ut-progress-stepper',
   imports: [MatIconModule],

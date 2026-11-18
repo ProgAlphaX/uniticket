@@ -1,56 +1,47 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { catchError, of, switchMap, tap } from 'rxjs';
 
-import { API_URL } from '../../../../core/config/api';
-import { ESTADOS, TIPOS } from '../../../../core/config/catalogos';
+import { TIPO_ICONO, TIPOS } from '../../../../core/config/catalogos';
 import { TicketDetalle } from '../../../../core/models/ticket';
 import { Usuario } from '../../../../core/models/usuario';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Avatar } from '../../../../shared/ui/avatar/avatar';
 import { StatusPill } from '../../../../shared/ui/status-pill/status-pill';
+import { UsuarioService } from '../../../usuarios/data/usuario.service';
 import { TicketService } from '../../data/ticket.service';
 import { AccionesPanel } from '../acciones-panel/acciones-panel';
-import { diasEntre, fechaDia, fechaHora } from '../fechas';
+import { diasEntre } from '../fechas';
 import { ProgressStepper } from '../progress-stepper/progress-stepper';
 import { RespuestaForm } from '../respuesta-form/respuesta-form';
 import { Seguimiento } from '../seguimiento/seguimiento';
 
-const ICONO_TIPO: Record<string, string> = {
-  CERTIFICADO: 'workspace_premium',
-  CITA_TUTOR: 'calendar_month',
-  PENSION: 'account_balance_wallet',
-  DOCUMENTOS: 'folder',
-};
+interface ErrorCarga {
+  titulo: string;
+  mensaje: string;
+}
 
-/** Rutas /solicitudes/:id y /admin/solicitudes/:id. Arma la columna principal y la lateral. */
 @Component({
   selector: 'ut-detalle-page',
-  imports: [MatIconModule, StatusPill, Avatar, ProgressStepper, Seguimiento, AccionesPanel, RespuestaForm],
+  imports: [DatePipe, MatIconModule, StatusPill, Avatar, ProgressStepper, Seguimiento, AccionesPanel, RespuestaForm],
   templateUrl: './detalle-page.html',
   styleUrl: './detalle-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DetallePage {
-  private tickets = inject(TicketService);
-  private http = inject(HttpClient);
-  protected readonly auth = inject(AuthService);
+  private readonly tickets = inject(TicketService);
+  private readonly usuarios = inject(UsuarioService);
+  private readonly auth = inject(AuthService);
 
-  /** Id de la ruta (withComponentInputBinding). */
   readonly id = input.required<string>();
 
   protected readonly ticket = signal<TicketDetalle | null>(null);
   protected readonly estudiante = signal<Usuario | null>(null);
   protected readonly cargando = signal(true);
-  protected readonly error = signal<{ status: number; message: string } | null>(null);
-
-  protected readonly TIPOS = TIPOS;
-  protected readonly ESTADOS = ESTADOS;
-  protected readonly ICONO_TIPO = ICONO_TIPO;
-  protected readonly fechaDia = fechaDia;
-  protected readonly fechaHora = fechaHora;
+  protected readonly error = signal<ErrorCarga | null>(null);
 
   protected readonly esAdmin = this.auth.esAdmin;
   protected readonly idUsuario = computed(() => this.auth.usuario()?.nId_Usuario ?? null);
@@ -59,22 +50,25 @@ export class DetallePage {
     () => this.ticket()?.seguimiento.filter(s => s.sAccion === 'OBSERVADO').length ?? 0,
   );
 
-  /** Nombre del estudiante: de su ficha si la tenemos, si no del evento REGISTRO. */
   protected readonly nombreEstudiante = computed(() => {
-    const u = this.estudiante();
-    if (u) return u.sNombreCompleto || `${u.sNombres} ${u.sApellidos}`;
+    const usuario = this.estudiante();
+    if (usuario) {
+      return `${usuario.sNombres} ${usuario.sApellidos}`;
+    }
     return this.ticket()?.seguimiento.find(s => s.sAccion === 'REGISTRO')?.sNombreUsuario ?? 'el estudiante';
   });
 
   protected readonly cerrada = computed(() => {
-    const e = this.ticket()?.sEstado;
-    return e === 'PROCEDE' || e === 'NO_PROCEDE';
+    const estado = this.ticket()?.sEstado;
+    return estado === 'PROCEDE' || estado === 'NO_PROCEDE';
   });
 
   protected readonly dias = computed(() => {
-    const t = this.ticket();
-    if (!t) return 0;
-    return this.cerrada() ? diasEntre(t.dFecha_Creacion, t.dFecha_Actualizacion) : diasEntre(t.dFecha_Creacion);
+    const ticket = this.ticket();
+    if (!ticket) {
+      return 0;
+    }
+    return diasEntre(ticket.dFecha_Creacion, this.cerrada() ? ticket.dFecha_Actualizacion : new Date());
   });
 
   constructor() {
@@ -85,36 +79,57 @@ export class DetallePage {
           this.error.set(null);
         }),
         switchMap(id =>
-          this.tickets.obtener(+id).pipe(
-            catchError((e: HttpErrorResponse) => {
-              this.error.set({ status: e.status, message: e.error?.message ?? 'No se pudo cargar la solicitud' });
+          this.tickets.obtener(Number(id)).pipe(
+            catchError((error: HttpErrorResponse) => {
+              this.error.set(this.errorDe(error));
               return of(null);
             }),
           ),
         ),
         takeUntilDestroyed(),
       )
-      .subscribe(t => {
-        this.ticket.set(t);
+      .subscribe(ticket => {
         this.cargando.set(false);
-        if (t && this.esAdmin()) this.cargarEstudiante(t.nId_Usuario);
+        if (ticket && !this.esAdmin() && ticket.nId_Usuario !== this.idUsuario()) {
+          this.error.set({ titulo: 'Solicitud no encontrada', mensaje: 'No existe o no pertenece a tu cuenta.' });
+          return;
+        }
+        this.ticket.set(ticket);
+        if (ticket && this.esAdmin()) {
+          this.cargarEstudiante(ticket.nId_Usuario);
+        }
       });
   }
 
-  /** Lo que devuelve el backend tras atender, decidir o responder. */
+  protected nombreTipo(ticket: TicketDetalle): string {
+    return TIPOS[ticket.sTipo];
+  }
+
+  protected iconoTipo(ticket: TicketDetalle): string {
+    return TIPO_ICONO[ticket.sTipo];
+  }
+
   protected actualizar(detalle: TicketDetalle): void {
     this.ticket.set(detalle);
   }
 
-  /**
-   * Ficha del estudiante (solo admin). GET /usuarios ya existe (op. 02).
-   * Cuando Luis suba UsuarioService, se puede cambiar por usuarioService.getUsuarios().
-   */
   private cargarEstudiante(idUsuario: number): void {
-    if (this.estudiante()?.nId_Usuario === idUsuario) return;
-    this.http.get<Usuario[]>(`${API_URL}/usuarios`).subscribe({
+    if (this.estudiante()?.nId_Usuario === idUsuario) {
+      return;
+    }
+    this.usuarios.getUsuarios().subscribe({
       next: lista => this.estudiante.set(lista.find(u => u.nId_Usuario === idUsuario) ?? null),
       error: () => this.estudiante.set(null),
     });
+  }
+
+  private errorDe(error: HttpErrorResponse): ErrorCarga {
+    if (error.status === 0) {
+      return { titulo: 'Sin conexión', mensaje: 'No se pudo conectar con el servidor.' };
+    }
+    if (error.status === 404) {
+      return { titulo: 'Solicitud no encontrada', mensaje: 'No existe o no pertenece a tu cuenta.' };
+    }
+    return { titulo: 'No se pudo cargar la solicitud', mensaje: error.error?.message ?? 'Inténtalo de nuevo.' };
   }
 }

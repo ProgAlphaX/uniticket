@@ -7,7 +7,7 @@
 } @else if (error(); as e) {
   <div class="alert" role="alert">
     <mat-icon fontSet="material-symbols-rounded">error</mat-icon>
-    <span><b>{{ e.status || '' }} · No se pudo cargar</b>{{ e.message }}</span>
+    <span><b>{{ e.titulo }}</b>{{ e.mensaje }}</span>
   </div>
 } @else if (ticket(); as t) {
   <div class="det">
@@ -16,8 +16,8 @@
         <div class="dh-top"><span class="num">{{ t.sNum_Ticket }}</span><ut-status-pill [estado]="t.sEstado" /></div>
         <h2>{{ t.sAsunto }}</h2>
         <div class="meta">
-          <span><mat-icon fontSet="material-symbols-rounded">{{ ICONO_TIPO[t.sTipo] }}</mat-icon>{{ TIPOS[t.sTipo] }}</span>
-          <span><mat-icon fontSet="material-symbols-rounded">calendar_today</mat-icon>{{ fechaDia(t.dFecha_Creacion) }}</span>
+          <span><mat-icon fontSet="material-symbols-rounded">{{ iconoTipo(t) }}</mat-icon>{{ nombreTipo(t) }}</span>
+          <span><mat-icon fontSet="material-symbols-rounded">calendar_today</mat-icon>{{ t.dFecha_Creacion | date: 'dd MMM y' }}</span>
           @if (esAdmin()) {
             <span><mat-icon fontSet="material-symbols-rounded">person</mat-icon>{{ nombreEstudiante() }}</span>
           }
@@ -79,9 +79,9 @@
       <section class="ut-card">
         <header class="box-h"><h3>Datos</h3></header>
         <ul class="kv">
-          <li><mat-icon fontSet="material-symbols-rounded">{{ ICONO_TIPO[t.sTipo] }}</mat-icon><div><small>Categoría</small><span>{{ TIPOS[t.sTipo] }}</span></div></li>
-          <li><mat-icon fontSet="material-symbols-rounded">calendar_today</mat-icon><div><small>Registrada</small><span>{{ fechaHora(t.dFecha_Creacion) }}</span></div></li>
-          <li><mat-icon fontSet="material-symbols-rounded">update</mat-icon><div><small>Última actualización</small><span>{{ fechaHora(t.dFecha_Actualizacion) }}</span></div></li>
+          <li><mat-icon fontSet="material-symbols-rounded">{{ iconoTipo(t) }}</mat-icon><div><small>Categoría</small><span>{{ nombreTipo(t) }}</span></div></li>
+          <li><mat-icon fontSet="material-symbols-rounded">calendar_today</mat-icon><div><small>Registrada</small><span>{{ t.dFecha_Creacion | date: 'dd MMM y, HH:mm' }}</span></div></li>
+          <li><mat-icon fontSet="material-symbols-rounded">update</mat-icon><div><small>Última actualización</small><span>{{ t.dFecha_Actualizacion | date: 'dd MMM y, HH:mm' }}</span></div></li>
           <li><mat-icon fontSet="material-symbols-rounded">schedule</mat-icon><div><small>{{ cerrada() ? 'Tiempo de atención' : 'Tiempo abierta' }}</small><span>{{ dias() }} día(s)</span></div></li>
         </ul>
       </section>

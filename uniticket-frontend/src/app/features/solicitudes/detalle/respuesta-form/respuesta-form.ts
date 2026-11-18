@@ -12,7 +12,6 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { TicketService } from '../../data/ticket.service';
 
-/** FRM-05 · Respuesta del estudiante a una observación (op. 11). */
 @Component({
   selector: 'ut-respuesta-form',
   imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
@@ -28,7 +27,6 @@ export class RespuestaForm {
 
   readonly ticket = input.required<TicketDetalle>();
   readonly observaciones = input(0);
-  /** Emite el detalle actualizado que devuelve el backend. */
   readonly enviado = output<TicketDetalle>();
 
   protected readonly MAX = MAX_OBSERVACIONES;

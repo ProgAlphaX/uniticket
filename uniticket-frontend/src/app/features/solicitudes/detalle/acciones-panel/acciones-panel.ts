@@ -15,7 +15,6 @@ import { StatusPill } from '../../../../shared/ui/status-pill/status-pill';
 import { TicketService } from '../../data/ticket.service';
 import { AccionDecision, DecisionDialog, DecisionDialogData } from '../decision-dialog/decision-dialog';
 
-/** Botones del administrador según el estado + contador de observaciones «1 de 2». */
 @Component({
   selector: 'ut-acciones-panel',
   imports: [NgTemplateOutlet, MatButtonModule, MatIconModule, StatusPill],
@@ -31,7 +30,6 @@ export class AccionesPanel {
 
   readonly ticket = input.required<TicketDetalle>();
   readonly nombreEstudiante = input('el estudiante');
-  /** Emite el detalle actualizado tras cualquier cambio de estado. */
   readonly actualizado = output<TicketDetalle>();
 
   protected readonly MAX = MAX_OBSERVACIONES;
@@ -47,6 +45,10 @@ export class AccionesPanel {
 
   protected atender(): void {
     const t = this.ticket();
+    const admin = this.auth.usuario();
+    if (!admin) {
+      return;
+    }
     const data: ConfirmDialogData = {
       titulo: `¿Empezar a atender ${t.sNum_Ticket}?`,
       mensaje: `Pasará a En proceso y se avisará a ${this.nombreEstudiante()}.`,
@@ -61,7 +63,7 @@ export class AccionesPanel {
         switchMap(() => {
           this.atendiendo.set(true);
           return this.tickets.cambiarEstado(t.nId_Ticket, {
-            nId_Admin: this.auth.usuario()!.nId_Usuario,
+            nId_Admin: admin.nId_Usuario,
             sEstado: 'EN_PROCESO',
             sComentario: null,
           });
