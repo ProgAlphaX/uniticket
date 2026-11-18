@@ -5,12 +5,13 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterOutlet } from '@angular/router';
 import { map } from 'rxjs';
 
-import { BottomNav } from '../bottom-nav/bottom-nav';
-import { Sidebar } from '../sidebar/sidebar';
-import { Topbar } from '../topbar/topbar';
 import { NotificationDrawer } from '../../features/notificaciones/notification-drawer/notification-drawer';
 
-/** Estructura de las pantallas privadas: menú, barra superior, contenido y panel de avisos a la derecha. */
+import { BottomNav } from '../bottom-nav/bottom-nav';
+import { esPantallaMovil } from '../pantalla';
+import { Sidebar } from '../sidebar/sidebar';
+import { Topbar } from '../topbar/topbar';
+
 @Component({
   selector: 'ut-app-shell',
   imports: [MatSidenavModule, RouterOutlet, Sidebar, BottomNav, Topbar, NotificationDrawer],
@@ -21,10 +22,7 @@ import { NotificationDrawer } from '../../features/notificaciones/notification-d
 export class AppShell {
   private readonly breakpoints = inject(BreakpointObserver);
 
-  protected readonly esMovil = toSignal(
-    this.breakpoints.observe('(max-width: 639.98px)').pipe(map(estado => estado.matches)),
-    { initialValue: false },
-  );
+  protected readonly esMovil = esPantallaMovil();
   protected readonly esTablet = toSignal(
     this.breakpoints.observe('(min-width: 640px) and (max-width: 1023.98px)').pipe(map(estado => estado.matches)),
     { initialValue: false },

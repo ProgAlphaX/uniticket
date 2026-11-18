@@ -1,101 +1,45 @@
-<div class="drawer">
+<header class="cabecera">
+  <h2>Avisos</h2>
+  <button matButton="text" type="button" [disabled]="!noLeidas()" (click)="marcarTodas()">Marcar todas como leídas</button>
+  <button matIconButton type="button" aria-label="Cerrar avisos" (click)="cerrar.emit()">
+    <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+  </button>
+</header>
 
-  <div class="header">
+<mat-button-toggle-group
+  class="filtro"
+  aria-label="Filtrar avisos"
+  hideSingleSelectionIndicator
+  [value]="filtro()"
+  (change)="filtro.set($event.value)"
+>
+  <mat-button-toggle value="TODAS">Todas</mat-button-toggle>
+  <mat-button-toggle value="NO_LEIDAS">No leídas ({{ noLeidas() }})</mat-button-toggle>
+</mat-button-toggle-group>
 
-    <button class="close-btn" type="button">
-      <mat-icon fontSet="material-symbols-rounded">
-        close
-      </mat-icon>
-    </button>
-
-    <h2>Notificaciones</h2>
-
-    <button
-      class="mark-all"
-      type="button"
-      (click)="marcarTodas()">
-      Marcar todas como leídas
-    </button>
-
-  </div>
-
-  <div class="tabs">
-
-    <button
-      class="tab"
-      [class.active]="filtro() === 'TODAS'"
-      (click)="cambiarFiltro('TODAS')">
-
-      Todas
-
-    </button>
-
-    <button
-      class="tab"
-      [class.active]="filtro() === 'NO_LEIDAS'"
-      (click)="cambiarFiltro('NO_LEIDAS')">
-
-      No leídas ({{ noLeidas() }})
-
-    </button>
-
-  </div>
-
-  <div class="lista">
-
-    @for (item of visibles(); track item.nId_Notificacion) {
-
-      <div
-        class="item"
-        (click)="marcarLeida(item.nId_Notificacion)">
-
-        <div
-          class="icono"
-          [class.respuesta]="esRespuesta(item.sTipo)"
-          [class.solicitud]="!esRespuesta(item.sTipo)">
-
-          @if (esRespuesta(item.sTipo)) {
-
-            <mat-icon fontSet="material-symbols-rounded">
-              chat_bubble
-            </mat-icon>
-
-          } @else {
-
-            <mat-icon fontSet="material-symbols-rounded">
-              work
-            </mat-icon>
-
+@if (visibles().length) {
+  <ul class="lista">
+    @for (aviso of visibles(); track aviso.nId_Notificacion) {
+      <li>
+        <button type="button" class="aviso" [class.nuevo]="!aviso.bLeida" (click)="abrir(aviso)">
+          <span class="icono" [style.color]="color(aviso)" [style.background]="color(aviso) + '1a'">
+            <mat-icon fontSet="material-symbols-rounded">{{ icono(aviso) }}</mat-icon>
+          </span>
+          <span class="texto">
+            <b>{{ aviso.sMensaje }}</b>
+            <small>{{ aviso.sNum_Ticket }} · {{ aviso.sAsunto }}</small>
+            <small class="hora">{{ tiempo(aviso.dFecha) }}</small>
+          </span>
+          @if (!aviso.bLeida) {
+            <i class="punto" aria-label="Sin leer"></i>
           }
-
-        </div>
-
-        <div class="contenido">
-
-          <div class="titulo">
-            {{ item.sMensaje }}
-          </div>
-
-          <div class="detalle">
-            {{ item.sAsunto }}
-            ·
-            {{ tiempo(item.dFecha) }}
-          </div>
-
-        </div>
-
-        @if (!item.bLeida) {
-          <div class="dot"></div>
-        }
-
-      </div>
-
+        </button>
+      </li>
     }
-
-  </div>
-
-  <div class="footer">
-    Se actualiza cada 30 s · GET /api/notificaciones
-  </div>
-
-</div>
+  </ul>
+} @else {
+  <ut-empty-state
+    [titulo]="filtro() === 'TODAS' ? 'No tienes avisos' : 'Estás al día'"
+    [mensaje]="filtro() === 'TODAS' ? 'Aquí verás los cambios en tus solicitudes.' : 'No tienes avisos sin leer.'"
+  />
+}

@@ -4,10 +4,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { NotificationBell } from '../../features/notificaciones/notification-bell/notification-bell';
 
 import { ROLES } from '../../core/config/catalogos';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationBell } from '../../features/notificaciones/notification-bell/notification-bell';
 import { Avatar } from '../../shared/ui/avatar/avatar';
 
 interface DatosRuta {
@@ -27,9 +27,7 @@ export class Topbar {
   private readonly router = inject(Router);
   private readonly ruta = inject(ActivatedRoute);
 
-  /** En celular no hay menú lateral, así que el botón de salir va aquí. */
   readonly esMovil = input(false);
-  /** Lo emite la campanita de notificaciones para abrir el panel lateral. */
   readonly abrirAvisos = output<void>();
 
   protected readonly usuario = this.auth.usuario;

@@ -8,16 +8,7 @@
 </div>
 
 <div class="derecha">
-  <div class="derecha">
-  <ut-notification-bell
-    (abrir)="abrirAvisos.emit()">
-  </ut-notification-bell>
-
-  @if (usuario(); as u) {
-    ...
-  }
-</div>
-
+  <ut-notification-bell (abrir)="abrirAvisos.emit()" />
   @if (usuario(); as u) {
     @if (!esMovil()) {
       <div class="perfil">

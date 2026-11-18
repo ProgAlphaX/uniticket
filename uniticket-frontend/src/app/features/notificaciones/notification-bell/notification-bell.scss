@@ -1,7 +1,9 @@
 :host {
-  display: block;
+  display: inline-flex;
+  --mat-badge-background-color: #e5484d;
+  --mat-badge-text-color: #ffffff;
 }
 
 button {
-  position: relative;
+  color: var(--ut-ink-2);
 }
